@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='quebra_frases',
-    version='0.1.1',
+    version='0.2.0',
     packages=['quebra_frases'],
     url='https://github.com/OpenJarbas/quebra_frases',
     license='apache-2.0',

@@ -32,6 +32,14 @@ print(quebra_frases.span_indexed_word_tokenize(sentence))
 # (20, 25, 'stuff'), (26, 29, 'for'), (30, 37, 'mycroft'), 
 # (37, 38, ','), (39, 46, 'mycroft'), (47, 49, 'is'), 
 # (50, 54, 'FOSS'), (54, 55, '!')]
+
+print(quebra_frases.sentence_tokenize(
+    "Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it. Did he mind? Adam Jones Jr. thinks he didn't. In any case, this isn't true... Well, with a probability of .9 it isn't."))
+#['Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it.',
+#'Did he mind?',
+#"Adam Jones Jr. thinks he didn't.",
+#"In any case, this isn't true...",
+#"Well, with a probability of .9 it isn't."]
 ```
 
 ## Install
