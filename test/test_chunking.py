@@ -27,15 +27,37 @@ class TestChunking(unittest.TestCase):
              (50, 54, 'FOSS'), (54, 55, '!')])
 
     def test_sentence(self):
+        test_sent = "Mr. Smith bought cheapsite.com for 1.5 million " \
+                    "dollars, i.e. he paid a lot for it. Did he mind? Adam " \
+                    "Jones Jr. thinks he didn't. In any case, this isn't true..." \
+                    " Well, with a probability of .9 it isn't."
         self.assertEqual(
-            sentence_tokenize(
-                "Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it. Did he mind? Adam Jones Jr. thinks he didn't. In any case, this isn't true... Well, with a probability of .9 it isn't."),
+            sentence_tokenize(test_sent),
             [
                 'Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it.',
                 'Did he mind?',
                 "Adam Jones Jr. thinks he didn't.",
                 "In any case, this isn't true...",
-                "Well, with a probability of .9 it isn't."]
+                "Well, with a probability of .9 it isn't."
+            ]
+        )
+        self.assertEqual(
+            char_indexed_sentence_tokenize(test_sent),
+            [(0, 'Mr. Smith bought cheapsite.com for 1.5 million dollars, '
+                 'i.e. he paid a lot for it.'),
+             (83, 'Did he mind?'),
+             (96, "Adam Jones Jr. thinks he didn't."),
+             (129, "In any case, this isn't true..."),
+             (161, "Well, with a probability of .9 it isn't.")]
+        )
+        self.assertEqual(
+            span_indexed_sentence_tokenize(test_sent),
+            [(0, 82, 'Mr. Smith bought cheapsite.com for 1.5 million '
+                     'dollars, i.e. he paid a lot for it.'),
+             (83, 95, 'Did he mind?'),
+             (96, 128, "Adam Jones Jr. thinks he didn't."),
+             (129, 160, "In any case, this isn't true..."),
+             (161, 201, "Well, with a probability of .9 it isn't.")]
         )
 
     def test_chunk(self):
@@ -45,21 +67,80 @@ class TestChunking(unittest.TestCase):
             ['sometimes i develop stuff for', 'mycroft', ',', 'mycroft',
              'is FOSS!']
         )
+        self.assertEqual(
+            chunk_list(['A', 'WORD', 'B', 'C', 'WORD', 'D'],
+                       delimiters=['WORD']),
+            [['A'], ['B', 'C'], ['D']]
+        )
 
-    def test_common_chunks(self):
-        # single token chunks
+    def test_get_tokens(self):
         samples = ["what do you dream about",
                    "what did you dream about",
-                   "what are your dreams about"]
+                   "what are your dreams about",
+                   "what were your dreams about"]
         self.assertEqual(
-            get_common_chunks(samples),
-            ['what', 'about'])
+            get_common_tokens(samples),
+            {'what', 'about'})
+        self.assertEqual(
+            get_uncommon_tokens(samples),
+            {'do', 'were', 'your', 'you', 'dream', 'dreams', 'did', 'are'})
+        self.assertEqual(
+            get_exclusive_tokens(samples),
+            {'do', 'did', 'are', 'were'})
 
-        samples = ["what is the speed of light in a vacuum",
-                   "what is the speed of sound in the air"]
         self.assertEqual(
-            get_common_chunks(samples),
-            ['what', 'is', 'the', 'speed', 'of', 'in'])
+            get_common_tokens(samples, squash=False),
+            [['what', 'about'], ['what', 'about'],
+             ['what', 'about'], ['what', 'about']])
+        self.assertEqual(
+            get_uncommon_tokens(samples, squash=False),
+            [['do', 'you', 'dream'],
+             ['did', 'you', 'dream'],
+             ['are', 'your', 'dreams'],
+             ['were', 'your', 'dreams']])
+        self.assertEqual(
+            get_exclusive_tokens(samples, squash=False),
+            [['do'], ['did'], ['are'], ['were']])
+
+    def test_get_chunks(self):
+        samples = ["tell me what do you dream about",
+                   "tell me what did you dream about",
+                   "tell me what are your dreams about",
+                   "tell me what were your dreams about"]
+        self.assertEqual(get_common_chunks(samples),
+                         {'tell me what', 'about'})
+
+        self.assertEqual(
+            get_common_chunks(samples, squash=False),
+            [['tell me what', 'about'],
+             ['tell me what', 'about'],
+             ['tell me what', 'about'],
+             ['tell me what', 'about']])
+
+        self.assertEqual(get_uncommon_chunks(samples),
+                         {'do you dream', 'did you dream',
+                          'are your dreams', 'were your dreams'})
+
+        self.assertEqual(get_uncommon_chunks(samples, squash=False),
+                         [['do you dream'],
+                          ['did you dream'],
+                          ['are your dreams'],
+                          ['were your dreams']])
+
+        self.assertEqual(get_exclusive_chunks(samples),
+                         {'do', 'did', 'are', 'were'})
+
+        samples = ["what is the speed of light",
+                   "what is the maximum speed of a firetruck",
+                   "why are fire trucks red"]
+        self.assertEqual(
+            get_exclusive_chunks(samples),
+            {'light', 'maximum', 'a firetruck', 'why are fire trucks red'})
+        self.assertEqual(
+            get_exclusive_chunks(samples, squash=False),
+            [['light'],
+             ['maximum', 'a firetruck'],
+             ['why are fire trucks red']])
 
     def test_utils(self):
         self.assertEqual(
