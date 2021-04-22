@@ -35,6 +35,20 @@ print(quebra_frases.span_indexed_sentence_tokenize(
 #(96, 128, "Adam Jones Jr. thinks he didn't."),
 #(129, 160, "In any case, this isn't true..."),
 #(161, 201, "Well, with a probability of .9 it isn't.")]
+
+print(quebra_frases.paragraph_tokenize('This is a paragraph!\n\t\nThis is another '
+                                       'one.\t\n\tUsing multiple lines\t   \n     '
+                                       '\n\tparagraph 3 says goodbye'))
+#['This is a paragraph!\n\t\n',
+#'This is another one.\t\n\tUsing multiple lines\t   \n     \n',
+#'\tparagraph 3 says goodbye']
+
+print(quebra_frases.span_indexed_paragraph_tokenize('This is a paragraph!\n\t\nThis is another '
+                                                    'one.\t\n\tUsing multiple lines\t   \n     '
+                                                    '\n\tparagraph 3 says goodbye'))
+#[(0, 23, 'This is a paragraph!\n\t\n'),
+#(23, 77, 'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
+#(77, 102, '\tparagraph 3 says goodbye')]
 ```
 
 chunking
