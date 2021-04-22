@@ -1,4 +1,5 @@
 import re
+from itertools import groupby
 
 
 def word_tokenize(input_string):
@@ -33,5 +34,30 @@ def span_indexed_sentence_tokenize(input_string):
             start_idx += sum(1 for _ in sentences[:idx])
         end_idx = start_idx + len(s)
         spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
+    return spans
 
+
+def paragraph_tokenize(input_string):
+    paragraphs = []
+    for group_separator, chunk in groupby(input_string.splitlines(True),
+                                          key=str.isspace):
+        if group_separator:
+            paragraphs[-1] += list(chunk)
+        else:
+            paragraphs.append(list(chunk))
+    return [''.join(chunk) for chunk in paragraphs]
+
+
+def char_indexed_paragraph_tokenize(input_string):
+    return [(s[0], s[2]) for s in
+            span_indexed_paragraph_tokenize(input_string)]
+
+
+def span_indexed_paragraph_tokenize(input_string):
+    sentences = paragraph_tokenize(input_string)
+    spans = []
+    for idx, s in enumerate(sentences):
+        start_idx = sum(len(_) for _ in sentences[:idx])
+        end_idx = start_idx + len(s)
+        spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
     return spans

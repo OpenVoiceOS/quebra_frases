@@ -60,6 +60,26 @@ class TestChunking(unittest.TestCase):
              (161, 201, "Well, with a probability of .9 it isn't.")]
         )
 
+    def test_paragraph(self):
+        test_str = 'This is a paragraph!\n\t\nThis is another ' \
+                   'one.\t\n\tUsing multiple lines\t   \n     ' \
+                   '\n\tparagraph 3 says goodbye'
+        self.assertEqual(
+            paragraph_tokenize(test_str),
+            ['This is a paragraph!\n\t\n',
+             'This is another one.\t\n\tUsing multiple lines\t   \n     \n',
+             '\tparagraph 3 says goodbye'])
+        self.assertEqual(
+            char_indexed_paragraph_tokenize(test_str),
+            [(0, 'This is a paragraph!\n\t\n'),
+             (23, 'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
+             (77, '\tparagraph 3 says goodbye')])
+        self.assertEqual(
+            span_indexed_paragraph_tokenize(test_str),
+            [(0, 23, 'This is a paragraph!\n\t\n'),
+             (23, 77, 'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
+             (77, 102, '\tparagraph 3 says goodbye')])
+
     def test_chunk(self):
         self.assertEqual(
             chunk("sometimes i develop stuff for mycroft, mycroft is FOSS!",
@@ -153,3 +173,4 @@ class TestChunking(unittest.TestCase):
             flatten([("A", "B"), ["C"], [["D", ["E", ["F"]]]]]),
             ["A", "B", "C", "D", "E", "F"]
         )
+
