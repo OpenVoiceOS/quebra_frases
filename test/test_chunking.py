@@ -10,6 +10,18 @@ class TestChunking(unittest.TestCase):
                 "sometimes i develop stuff for mycroft, mycroft is FOSS!", ),
             ['sometimes', 'i', 'develop', 'stuff', 'for', 'mycroft', ',',
              'mycroft', 'is', 'FOSS', '!'])
+        self.assertEqual(
+            word_tokenize("2 and 3/4"),
+            ['2', 'and', '3', "/", '4'])
+        self.assertEqual(
+            word_tokenize("2 and (3/4)"),
+            ['2', 'and', '(', '3', '/', '4', ')'])
+        self.assertEqual(
+            word_tokenize("2 and [3/4]"),
+            ['2', 'and', '[', '3', '/', '4', ']'])
+        self.assertEqual(
+            word_tokenize("2 and 3\\4"),
+            ['2', 'and', '3', "\\", '4'])
 
         self.assertEqual(
             char_indexed_word_tokenize(

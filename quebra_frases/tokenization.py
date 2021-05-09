@@ -2,22 +2,26 @@ import re
 from itertools import groupby
 
 
+_WORD_REGEX = r'[\'.?!,;[\]()/\\]|\w+'
+_SENTENCE_REGEX = r'(?<=[^A-Z].[.?!]) +(?=[A-Z])'
+
+
 def word_tokenize(input_string):
-    return [m.group() for m in re.finditer(r'[\'.?!,;]|\w+', input_string)]
+    return [m.group() for m in re.finditer(_WORD_REGEX, input_string)]
 
 
 def char_indexed_word_tokenize(input_string):
     return [(m.start(0), m.group())
-            for m in re.finditer(r'[\'.?!,;]|\w+', input_string)]
+            for m in re.finditer(_WORD_REGEX, input_string)]
 
 
 def span_indexed_word_tokenize(input_string):
     return [(m.start(0), m.end(0), m.group())
-            for m in re.finditer(r'[\'.?!,;]|\w+', input_string)]
+            for m in re.finditer(_WORD_REGEX, input_string)]
 
 
 def sentence_tokenize(input_string):
-    return re.split(r'(?<=[^A-Z].[.?!]) +(?=[A-Z])', input_string)
+    return re.split(_SENTENCE_REGEX, input_string)
 
 
 def char_indexed_sentence_tokenize(input_string):
