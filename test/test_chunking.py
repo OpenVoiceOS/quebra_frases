@@ -38,6 +38,13 @@ class TestChunking(unittest.TestCase):
              (37, 38, ','), (39, 46, 'mycroft'), (47, 49, 'is'),
              (50, 54, 'FOSS'), (54, 55, '!')])
 
+        self.assertEqual(
+            word_tokenize("-2"),
+            ['-', '2'])
+        self.assertEqual(
+            word_tokenize("- 2"),
+            ['-', '2'])
+
     def test_sentence(self):
         test_sent = "Mr. Smith bought cheapsite.com for 1.5 million " \
                     "dollars, i.e. he paid a lot for it. Did he mind? Adam " \

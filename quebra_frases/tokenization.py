@@ -2,7 +2,7 @@ import re
 from itertools import groupby
 
 
-_WORD_REGEX = r'[\'.?!,;[\]()/\\]|\w+'
+_WORD_REGEX = r'[\'.\-?!,;[\]()/\\]|\w+'
 _SENTENCE_REGEX = r'(?<=[^A-Z].[.?!]) +(?=[A-Z])'
 
 
