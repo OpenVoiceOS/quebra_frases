@@ -11,6 +11,9 @@ class TestChunking(unittest.TestCase):
             ['sometimes', 'i', 'develop', 'stuff', 'for', 'mycroft', ',',
              'mycroft', 'is', 'FOSS', '!'])
         self.assertEqual(
+            word_tokenize("100%"),
+            ['100', '%'])
+        self.assertEqual(
             word_tokenize("2 and 3/4"),
             ['2', 'and', '3', "/", '4'])
         self.assertEqual(
