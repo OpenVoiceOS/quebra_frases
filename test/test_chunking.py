@@ -48,6 +48,49 @@ class TestChunking(unittest.TestCase):
             word_tokenize("- 2"),
             ['-', '2'])
 
+    def test_empty(self):
+        test_sent = "this is a   string with  many \t spaces and \n\r\t\r stuff"
+        self.assertEqual(
+            get_empty_spans(test_sent),
+            [(4, 5, ' '),
+             (7, 8, ' '),
+             (9, 12, '   '),
+             (18, 19, ' '),
+             (23, 25, '  '),
+             (29, 32, ' \t '),
+             (38, 39, ' '),
+             (42, 48, ' \n\r\t\r ')]
+        )
+        self.assertEqual(
+            span_indexed_empty_space_tokenize(test_sent),
+            [(0, 4, 'this'),
+             (5, 7, 'is'),
+             (8, 9, 'a'),
+             (12, 18, 'string'),
+             (19, 23, 'with'),
+             (25, 29, 'many'),
+             (32, 38, 'spaces'),
+             (39, 42, 'and'),
+             (48, 53, 'stuff')]
+        )
+        self.assertEqual(
+            char_indexed_empty_space_tokenize(test_sent),
+            [(0, 'this'),
+             (5, 'is'),
+             (8, 'a'),
+             (12, 'string'),
+             (19, 'with'),
+             (25, 'many'),
+             (32, 'spaces'),
+             (39, 'and'),
+             (48, 'stuff')]
+        )
+        self.assertEqual(
+            empty_space_tokenize(test_sent),
+            ['this', 'is', 'a', 'string',
+             'with', 'many', 'spaces', 'and', 'stuff']
+        )
+
     def test_sentence(self):
         test_sent = "Mr. Smith bought cheapsite.com for 1.5 million " \
                     "dollars, i.e. he paid a lot for it. Did he mind? Adam " \
@@ -94,12 +137,14 @@ class TestChunking(unittest.TestCase):
         self.assertEqual(
             char_indexed_paragraph_tokenize(test_str),
             [(0, 'This is a paragraph!\n\t\n'),
-             (23, 'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
+             (23,
+              'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
              (77, '\tparagraph 3 says goodbye')])
         self.assertEqual(
             span_indexed_paragraph_tokenize(test_str),
             [(0, 23, 'This is a paragraph!\n\t\n'),
-             (23, 77, 'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
+             (23, 77,
+              'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
              (77, 102, '\tparagraph 3 says goodbye')])
 
     def test_chunk(self):
@@ -195,4 +240,3 @@ class TestChunking(unittest.TestCase):
             flatten([("A", "B"), ["C"], [["D", ["E", ["F"]]]]]),
             ["A", "B", "C", "D", "E", "F"]
         )
-
