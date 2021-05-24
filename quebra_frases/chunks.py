@@ -5,10 +5,13 @@ from quebra_frases.tokens import get_uncommon_tokens, get_common_tokens, get_exc
 from quebra_frases.list_utils import flatten
 
 
-def chunk(text, delimiters):
+def chunk(text, delimiters, strip=True):
     pattern = f"({'|'.join(list(delimiters))})"
     pts = re.split(pattern, text)
-    return [p.strip() for p in pts if p.strip()]
+    if strip:
+        return [p.strip() for p in pts if p.strip()]
+    else:
+        return pts
 
 
 def chunk_list(some_list, delimiters):
@@ -43,3 +46,16 @@ def get_exclusive_chunks(samples, squash=True):
     if squash:
         return set(flatten(chunks))
     return chunks
+
+
+def find_spans(text, samples):
+    chunks = chunk(text, samples, strip=False)
+    spans = []
+    idx = 0
+    for sequence in chunks:
+        if sequence in samples:
+            end = idx + len(sequence)
+            spans.append((idx, end, sequence))
+        idx += len(sequence)
+    return chunks
+
