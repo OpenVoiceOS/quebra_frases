@@ -57,5 +57,6 @@ def find_spans(text, samples):
             end = idx + len(sequence)
             spans.append((idx, end, sequence))
         idx += len(sequence)
-    return chunks
+    return spans
+
 
