@@ -1,8 +1,8 @@
-import re
+import regex as re
 from itertools import groupby
 
 
-_WORD_REGEX = r'[\'.\-?!%,;[\]()/\\]|\w+'
+_WORD_REGEX = re.compile(r"(?:\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
 _SENTENCE_REGEX = r'(?<=[^A-Z].[.?!]) +(?=[A-Z])'
 
 
