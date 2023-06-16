@@ -18,7 +18,7 @@ setup(
     version='0.3.7',
     packages=['quebra_frases'],
     url='https://github.com/OpenJarbas/quebra_frases',
-    install_requires=required("requirements/requirements.txt"),
+    install_requires=required("requirements.txt"),
     license='apache-2.0',
     author='jarbasAi',
     author_email='jarbasai@mailfence.com',
