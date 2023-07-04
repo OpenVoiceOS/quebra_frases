@@ -2,7 +2,7 @@ import regex as re
 from itertools import groupby
 
 
-_WORD_REGEX = re.compile(r"(?:\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
+_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
 _SENTENCE_REGEX = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s')
 
 
