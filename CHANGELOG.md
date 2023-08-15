@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/quebra_frases/tree/HEAD)
+## [V0.3.7a1](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7a1) (2023-08-15)
 
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/v0.2.0...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/v0.2.0...V0.3.7a1)
 
 **Implemented enhancements:**
 
