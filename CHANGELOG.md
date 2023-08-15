@@ -1,5 +1,9 @@
 # Changelog
 
+## [V0.3.7a2](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7a2) (2023-08-15)
+
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7a1...V0.3.7a2)
+
 ## [V0.3.7a1](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7a1) (2023-08-15)
 
 [Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/v0.2.0...V0.3.7a1)
