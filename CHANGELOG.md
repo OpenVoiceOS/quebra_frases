@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/OpenVoiceOS/quebra_frases/tree/HEAD)
+
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7...HEAD)
+
+**Merged pull requests:**
+
+- Configure Renovate [\#5](https://github.com/OpenVoiceOS/quebra_frases/pull/5) ([renovate[bot]](https://github.com/apps/renovate))
+
+## [V0.3.7](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7) (2023-08-15)
+
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7a2...V0.3.7)
+
 ## [V0.3.7a2](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7a2) (2023-08-15)
 
 [Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7a1...V0.3.7a2)
