@@ -6,7 +6,7 @@ from quebra_frases.list_utils import flatten
 
 
 def chunk(text, delimiters, strip=True):
-    pattern = f"({'|'.join(list(delimiters))})"
+    pattern = f"({'|'.join([re.escape(list(delimiters)[i]) for i in range(len(delimiters))])})"
     pts = re.split(pattern, text)
     if strip:
         return [p.strip() for p in pts if p.strip()]

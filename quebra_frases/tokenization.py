@@ -2,7 +2,7 @@ import regex as re
 from itertools import groupby
 
 
-_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
+_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:]\d*)+)|\b[\p{L}\p{N}]*(?:\.[\p{L}\p{N}]+)+\.?|[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#@&-]", re.I)
 _SENTENCE_REGEX = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s')
 
 
@@ -31,13 +31,14 @@ def char_indexed_sentence_tokenize(input_string):
 def span_indexed_sentence_tokenize(input_string):
     sentences = sentence_tokenize(input_string)
     spans = []
-    for idx, s in enumerate(sentences):
-        start_idx = sum(len(_) for _ in sentences[:idx])
-        if start_idx > 0:
-            # account for white spaces
-            start_idx += sum(1 for _ in sentences[:idx])
+    current_pos = 0
+    for s in sentences:
+        start_idx = input_string.find(s, current_pos)
+        if start_idx == -1:
+            continue
         end_idx = start_idx + len(s)
         spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
+        current_pos = end_idx
     return spans
 
 
@@ -45,7 +46,7 @@ def paragraph_tokenize(input_string):
     paragraphs = []
     for group_separator, chunk in groupby(input_string.splitlines(True),
                                           key=str.isspace):
-        if group_separator:
+        if group_separator and paragraphs:
             paragraphs[-1] += list(chunk)
         else:
             paragraphs.append(list(chunk))
@@ -58,12 +59,16 @@ def char_indexed_paragraph_tokenize(input_string):
 
 
 def span_indexed_paragraph_tokenize(input_string):
-    sentences = paragraph_tokenize(input_string)
+    paragraphs = paragraph_tokenize(input_string)
     spans = []
-    for idx, s in enumerate(sentences):
-        start_idx = sum(len(_) for _ in sentences[:idx])
-        end_idx = start_idx + len(s)
+    current_pos = 0
+    for p in paragraphs:
+        start_idx = input_string.find(p, current_pos)
+        if start_idx == -1:
+            continue
+        end_idx = start_idx + len(p)
         spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
+        current_pos = end_idx
     return spans
 
 
@@ -77,7 +82,7 @@ def get_empty_spans(input_string):
             if start is None:
                 start = idx
             if next_char is None:
-                end = idx
+                end = idx + 1
                 spans.append((start, end, input_string[start:end]))
         elif start:
             end = idx
