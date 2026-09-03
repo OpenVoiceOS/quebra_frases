@@ -32,7 +32,7 @@ jobs:
           python -m pip install build wheel
       - name: Increment Version
         run: |
-          VER=$(python setup.py --version)
+          VER=$(python -c "from quebra_frases.version import __version__; print(__version__)")
           python scripts/bump_alpha.py
       - name: "Generate release changelog"
         uses: heinrichreimer/github-changelog-generator-action@v2.3
@@ -45,7 +45,7 @@ jobs:
           commit_message: Increment Version
           branch: master
       - name: version
-        run: echo "::set-output name=version::$(python setup.py --version)"
+        run: echo "::set-output name=version::$(python -c "from quebra_frases.version import __version__; print(__version__)")"
         id: version
       - name: Create Release
         id: create_release
@@ -63,7 +63,7 @@ jobs:
           commitish: master
       - name: Build Distribution Packages
         run: |
-          python setup.py bdist_wheel
+          python -m build --wheel
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
