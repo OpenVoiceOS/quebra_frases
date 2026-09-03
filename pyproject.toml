@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quebra_frases"
+dynamic = ["version"]
+description = "Tokenizer tool to chunks strings into byte sized pieces"
+readme = "readme.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "jarbasAi", email = "jarbasai@mailfence.com"}]
+requires-python = ">=3.9"
+dependencies = [
+    "regex",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Text Processing :: Linguistic",
+    "License :: OSI Approved :: Apache Software License",
+
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/OpenVoiceOS/quebra_frases"
+
+[tool.setuptools]
+packages = ["quebra_frases"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "quebra_frases.version.__version__"}
+
+[tool.setuptools.package-data]
+quebra_frases = ["*"]

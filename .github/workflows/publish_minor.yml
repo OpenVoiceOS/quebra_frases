@@ -21,7 +21,7 @@ jobs:
           python -m pip install build wheel
       - name: Remove alpha (declare stable)
         run: |
-          VER=$(python setup.py --version)
+          VER=$(python -c "from quebra_frases.version import __version__; print(__version__)")
           python scripts/remove_alpha.py
       - name: "Generate release changelog"
         uses: heinrichreimer/github-changelog-generator-action@v2.3
@@ -34,7 +34,7 @@ jobs:
           commit_message: Declare alpha stable
           branch: master
       - name: version
-        run: echo "::set-output name=version::$(python setup.py --version)"
+        run: echo "::set-output name=version::$(python -c "from quebra_frases.version import __version__; print(__version__)")"
         id: version
       - name: Create Release
         id: create_release
@@ -52,13 +52,13 @@ jobs:
           commitish: master
       - name: Build Distribution Packages
         run: |
-          python setup.py bdist_wheel
+          python -m build --wheel
       - name: Prepare next Minor version
-        run: echo "::set-output name=version::$(python setup.py --version)"
+        run: echo "::set-output name=version::$(python -c "from quebra_frases.version import __version__; print(__version__)")"
         id: alpha
       - name: Increment Version ${{ steps.alpha.outputs.version }}Alpha0
         run: |
-          VER=$(python setup.py --version)
+          VER=$(python -c "from quebra_frases.version import __version__; print(__version__)")
           python scripts/bump_minor.py
       - name: Commit to master
         uses: stefanzweifel/git-auto-commit-action@v7
