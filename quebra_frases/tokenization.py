@@ -3,7 +3,23 @@ from itertools import groupby
 
 
 _WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
-_SENTENCE_REGEX = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s')
+_SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s')
+_VOWELS = set("aeiouyAEIOUYáàâãéêíóôõúüÁÀÂÃÉÊÍÓÔÕÚÜ")
+_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+
+
+def _is_abbreviation(word):
+    # a period does not end a sentence when the token before it is:
+    # - a single letter (initials: "D.", "J.")
+    # - a consonant-only token (abbreviations like "Dr.", "Srs.")
+    # - a known short abbreviation that the two rules above miss
+    if not word:
+        return False
+    if len(word) == 1:
+        return True
+    if not any(ch in _VOWELS for ch in word):
+        return True
+    return word.lower() in _ABBREVIATIONS
 
 
 def word_tokenize(input_string):
@@ -21,7 +37,21 @@ def span_indexed_word_tokenize(input_string):
 
 
 def sentence_tokenize(input_string):
-    return re.split(_SENTENCE_REGEX, input_string)
+    sentences = []
+    last = 0
+    for m in _SENTENCE_SPLIT_CANDIDATE.finditer(input_string):
+        split_at = m.start()
+        if input_string[split_at - 1] == '.':
+            j = split_at - 2
+            while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
+                j -= 1
+            word = input_string[j + 1:split_at - 1]
+            if _is_abbreviation(word):
+                continue
+        sentences.append(input_string[last:split_at])
+        last = m.end()
+    sentences.append(input_string[last:])
+    return sentences
 
 
 def char_indexed_sentence_tokenize(input_string):
