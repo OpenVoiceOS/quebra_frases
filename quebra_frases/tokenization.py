@@ -3,7 +3,9 @@ from itertools import groupby
 
 
 _WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
-_SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s')
+# the whole whitespace run, not one character of it: matching a single
+# space leaves the rest of the run at the head of the next sentence
+_SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
 _VOWELS = set("aeiouyAEIOUYáàâãéêíóôõúüÁÀÂÃÉÊÍÓÔÕÚÜ")
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
 
@@ -61,13 +63,17 @@ def char_indexed_sentence_tokenize(input_string):
 def span_indexed_sentence_tokenize(input_string):
     sentences = sentence_tokenize(input_string)
     spans = []
-    for idx, s in enumerate(sentences):
-        start_idx = sum(len(_) for _ in sentences[:idx])
-        if start_idx > 0:
-            # account for white spaces
-            start_idx += sum(1 for _ in sentences[:idx])
-        end_idx = start_idx + len(s)
+    cursor = 0
+    for sentence in sentences:
+        # locate each sentence in the source rather than adding up the
+        # lengths of the ones before it: that arithmetic assumes exactly one
+        # character between sentences and drifts wherever there are more
+        start_idx = input_string.find(sentence, cursor)
+        if start_idx < 0:
+            start_idx = cursor
+        end_idx = start_idx + len(sentence)
         spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
+        cursor = end_idx
     return spans
 
 
@@ -76,7 +82,11 @@ def paragraph_tokenize(input_string):
     for group_separator, chunk in groupby(input_string.splitlines(True),
                                           key=str.isspace):
         if group_separator:
-            paragraphs[-1] += list(chunk)
+            # a separator run belongs to the paragraph it follows; leading
+            # whitespace follows nothing, so there is no paragraph to attach
+            # it to and it is not a paragraph of its own
+            if paragraphs:
+                paragraphs[-1] += list(chunk)
         else:
             paragraphs.append(list(chunk))
     return [''.join(chunk) for chunk in paragraphs]
@@ -107,9 +117,10 @@ def get_empty_spans(input_string):
             if start is None:
                 start = idx
             if next_char is None:
-                end = idx
+                # the span end is exclusive, and idx is the last character
+                end = idx + 1
                 spans.append((start, end, input_string[start:end]))
-        elif start:
+        elif start is not None:
             end = idx
             spans.append((start, end, input_string[start:end]))
             start = None

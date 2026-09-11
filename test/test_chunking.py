@@ -240,3 +240,37 @@ class TestChunking(unittest.TestCase):
             flatten([("A", "B"), ["C"], [["D", ["E", ["F"]]]]]),
             ["A", "B", "C", "D", "E", "F"]
         )
+
+
+class TestReportedDefects(unittest.TestCase):
+    """Inputs that were wrong on dev at c8e1e10, each the exact reported case."""
+
+    def test_chunk_delimiter_is_a_literal(self):
+        # "." read as a regex matched every character
+        self.assertEqual(chunk("a.b|c", ["."]), ["a", ".", "b|c"])
+
+    def test_chunk_delimiter_that_cannot_compile_alone(self):
+        # "+" and "(" raised re.error straight out of the delimiter list
+        self.assertEqual(chunk("a+b", ["+"]), ["a", "+", "b"])
+        self.assertEqual(chunk("a(b", ["("]), ["a", "(", "b"])
+
+    def test_paragraph_tokenize_leading_separator(self):
+        # a leading newline indexed paragraphs[-1] on an empty list
+        self.assertEqual(paragraph_tokenize("\nfirst"), ["first"])
+        self.assertEqual(paragraph_tokenize("\nfirst\n\nsecond"),
+                         ["first\n\n", "second"])
+
+    def test_empty_span_at_end_of_string_keeps_its_length(self):
+        # the trailing run of two spaces was reported as one character
+        self.assertEqual(get_empty_spans("hello  world  "),
+                         [(5, 7, "  "), (12, 14, "  ")])
+
+    def test_empty_span_starting_at_index_zero(self):
+        # `elif start:` is false when the run starts at 0, so it was dropped
+        self.assertEqual(get_empty_spans("  a"), [(0, 2, "  ")])
+
+    def test_sentence_spans_survive_a_double_space(self):
+        # the offsets assumed exactly one space between sentences
+        self.assertEqual(
+            span_indexed_sentence_tokenize("One.  Two. Three."),
+            [(0, 4, "One."), (6, 10, "Two."), (11, 17, "Three.")])
