@@ -13,15 +13,26 @@ class TestChunking(unittest.TestCase):
         self.assertEqual(
             word_tokenize("100%"),
             ['100', '%'])
+        # A digit run joined by "/" is one token, the same as "1.5" and
+        # "13:00": the numeric alternative of _WORD_REGEX takes [,.:/] as
+        # in-number separators since #1, so a fraction or a date reaches a
+        # number parser whole ("3/4", "11/11/2023"). A "/" between spaces
+        # or between letters is still its own token.
         self.assertEqual(
             word_tokenize("2 and 3/4"),
-            ['2', 'and', '3', "/", '4'])
+            ['2', 'and', '3/4'])
         self.assertEqual(
             word_tokenize("2 and (3/4)"),
-            ['2', 'and', '(', '3', '/', '4', ')'])
+            ['2', 'and', '(', '3/4', ')'])
         self.assertEqual(
             word_tokenize("2 and [3/4]"),
-            ['2', 'and', '[', '3', '/', '4', ']'])
+            ['2', 'and', '[', '3/4', ']'])
+        self.assertEqual(
+            word_tokenize("on 11/11/2023 at 13:00"),
+            ['on', '11/11/2023', 'at', '13:00'])
+        self.assertEqual(
+            word_tokenize("3 / 4 and a/b"),
+            ['3', '/', '4', 'and', 'a', '/', 'b'])
         self.assertEqual(
             word_tokenize("2 and 3\\4"),
             ['2', 'and', '3', "\\", '4'])
@@ -41,12 +52,20 @@ class TestChunking(unittest.TestCase):
              (37, 38, ','), (39, 46, 'mycroft'), (47, 49, 'is'),
              (50, 54, 'FOSS'), (54, 55, '!')])
 
+        # A leading "-" on a digit run is the sign of a negative number
+        # since #3 ("-2", "-2.5"); a "-" set apart by a space is an operator
         self.assertEqual(
             word_tokenize("-2"),
-            ['-', '2'])
+            ['-2'])
+        self.assertEqual(
+            word_tokenize("-2.5"),
+            ['-2.5'])
         self.assertEqual(
             word_tokenize("- 2"),
             ['-', '2'])
+        self.assertEqual(
+            word_tokenize("2 - 2"),
+            ['2', '-', '2'])
 
     def test_empty(self):
         test_sent = "this is a   string with  many \t spaces and \n\r\t\r stuff"
