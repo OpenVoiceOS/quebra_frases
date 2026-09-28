@@ -45,7 +45,7 @@ jobs:
           commit_message: Increment Version
           branch: master
       - name: version
-        run: echo "::set-output name=version::$(python -c "from quebra_frases.version import __version__; print(__version__)")"
+        run: echo "version=$(python -c "from quebra_frases.version import __version__; print(__version__)")" >> $GITHUB_OUTPUT
         id: version
       - name: Create Release
         id: create_release
