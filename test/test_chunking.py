@@ -67,6 +67,44 @@ class TestChunking(unittest.TestCase):
             word_tokenize("2 - 2"),
             ['2', '-', '2'])
 
+    def test_word_combining_marks(self):
+        # Vowel signs, viramas and tone marks (Unicode category Mn/Mc) are
+        # part of the word they sit on. Thai writes no spaces between words,
+        # so the whole run is one token; punctuation is still split off.
+        self.assertEqual(
+            word_tokenize("เพิ่มความสว่างไฟ"),
+            ['เพิ่มความสว่างไฟ'])
+        self.assertEqual(
+            word_tokenize("เพิ่มความสว่างไฟ!"),
+            ['เพิ่มความสว่างไฟ', '!'])
+        self.assertEqual(
+            word_tokenize("ปิดไฟ, เปิดเพลง?"),
+            ['ปิดไฟ', ',', 'เปิดเพลง', '?'])
+        # Hindi (Devanagari)
+        self.assertEqual(
+            word_tokenize("नमस्ते"),
+            ['नमस्ते'])
+        self.assertEqual(
+            word_tokenize("बत्ती की चमक बढ़ाओ!"),
+            ['बत्ती', 'की', 'चमक', 'बढ़ाओ', '!'])
+        # Bengali
+        self.assertEqual(
+            word_tokenize("আলো বাড়াও"),
+            ['আলো', 'বাড়াও'])
+        # Tamil
+        self.assertEqual(
+            word_tokenize("விளக்கை அணை"),
+            ['விளக்கை', 'அணை'])
+        # a Latin accent written as a separate combining mark (NFD) stays
+        # on its letter too
+        self.assertEqual(
+            word_tokenize("cafe\u0301 noir"),
+            ['cafe\u0301', 'noir'])
+        # spans still cover the whole word, marks included
+        self.assertEqual(
+            span_indexed_word_tokenize("नमस्ते दुनिया"),
+            [(0, 6, 'नमस्ते'), (7, 13, 'दुनिया')])
+
     def test_empty(self):
         test_sent = "this is a   string with  many \t spaces and \n\r\t\r stuff"
         self.assertEqual(

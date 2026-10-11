@@ -2,7 +2,11 @@ import regex as re
 from itertools import groupby
 
 
-_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
+# \p{M} (combining marks) belongs with \p{L}: Thai, Devanagari, Bengali,
+# Tamil and other abugidas write vowel signs, viramas and tone marks as
+# Mn/Mc code points inside a word ("เพิ่ม", "नमस्ते"). Leaving them out of
+# the letter class made every mark end the token and vanish from the output.
+_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b[\p{L}\p{M}]*(?:\.[\p{L}\p{M}]+)+\.|[\p{L}\p{M}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
 # the whole whitespace run, not one character of it: matching a single
 # space leaves the rest of the run at the head of the next sentence
 _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
