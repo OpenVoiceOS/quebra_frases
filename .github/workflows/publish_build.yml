@@ -34,7 +34,7 @@ jobs:
           commit_message: Declare alpha stable
           branch: master
       - name: version
-        run: echo "::set-output name=version::$(python -c "from quebra_frases.version import __version__; print(__version__)")"
+        run: echo "version=$(python -c "from quebra_frases.version import __version__; print(__version__)")" >> $GITHUB_OUTPUT
         id: version
       - name: Create Release
         id: create_release
@@ -54,7 +54,7 @@ jobs:
         run: |
           python -m build --wheel
       - name: Prepare next Build version
-        run: echo "::set-output name=version::$(python -c "from quebra_frases.version import __version__; print(__version__)")"
+        run: echo "version=$(python -c "from quebra_frases.version import __version__; print(__version__)")" >> $GITHUB_OUTPUT
         id: alpha
       - name: Increment Version ${{ steps.alpha.outputs.version }}Alpha0
         run: |
