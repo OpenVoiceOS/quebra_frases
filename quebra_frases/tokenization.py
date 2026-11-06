@@ -6,7 +6,19 @@ from itertools import groupby
 # Tamil and other abugidas write vowel signs, viramas and tone marks as
 # Mn/Mc code points inside a word ("เพิ่ม", "नमस्ते"). Leaving them out of
 # the letter class made every mark end the token and vanish from the output.
-_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b[\p{L}\p{M}]*(?:\.[\p{L}\p{M}]+)+\.|[\p{L}\p{M}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
+# ZWNJ and ZWJ (U+200C, U+200D) sit inside Persian and Indic words, and
+# Unicode word segmentation (UAX #29, rule WB4) never breaks a word at them.
+# A number ends on a digit: a separator with no digit after it is the
+# punctuation that follows the number ("14:30.", "5,"). U+066B and U+066C
+# are the Arabic decimal and thousands separators.
+# The last alternative makes any other character that is not space a token
+# of its own: punctuation, a currency sign, a dash or any other symbol. No
+# character is left out of the tokens.
+_WORD_REGEX = re.compile(
+    r"(?:-?\d+(?:[,.:\/\u066b\u066c]\d+)+)"
+    r"|\b[\p{L}\p{M}]*(?:\.[\p{L}\p{M}]+)+\."
+    r"|[\p{L}\p{M}\p{N}\u200c\u200d'-]+"
+    r"|\S", re.I)
 # the whole whitespace run, not one character of it: matching a single
 # space leaves the rest of the run at the head of the next sentence
 _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
