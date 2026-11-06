@@ -32,9 +32,10 @@ _LATIN_WORD = re.compile(r"[\p{Latin}']+")
 # letters whole. Each one has a Unicode character name that holds a vowel
 # or a vowel ligature, as in LATIN SMALL LETTER AE, O WITH STROKE, DOTLESS I,
 # SCHWA, OPEN E, LIGATURE OE and LIGATURE FI. Letters whose name holds a
-# vowel but which stand for a consonant are left out: TURNED Y and TURNED Y
-# WITH BELT (lateral consonants in Unicode NamesList.txt), Y WITH HOOK (a
-# palatal in Fula and Hausa) and OI (formal alias GHA in NameAliases.txt).
+# vowel but which stand for a consonant are left out: TURNED Y (a lateral
+# approximant in Unicode NamesList.txt), TURNED Y WITH BELT (the belt marks
+# a lateral fricative, as in L WITH BELT), Y WITH HOOK (a palatal in Fula
+# and Hausa) and OI (formal alias GHA in NameAliases.txt).
 # Modifier letters are not in the list, so "Srª." stays an abbreviation.
 _VOWELS = set(
     "aeiouyAEIOUY"
@@ -45,7 +46,10 @@ _VOWELS = set(
     "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
-_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+# "mm" (French Messieurs, Portuguese Meritíssimo, Spanish SS.MM.) is also
+# the numeral MM, so the consonant-only rule does not keep it
+_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num",
+                  "mm"}
 # a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
 # letters that are not numerals ("ID", "IIIII") do not match
 _ROMAN_NUMERAL = re.compile(

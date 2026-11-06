@@ -3,6 +3,7 @@ import unittest
 
 from quebra_frases import (char_indexed_word_tokenize, sentence_tokenize,
                            span_indexed_word_tokenize, word_tokenize)
+from quebra_frases.tokenization import _VOWELS
 
 
 class TestSentenceTokenize(unittest.TestCase):
@@ -88,6 +89,21 @@ class TestSentenceTokenize(unittest.TestCase):
                          ["Comprei um CD.", "Depois saí."])
         self.assertEqual(sentence_tokenize("O século XX. acabou."),
                          ["O século XX. acabou."])
+
+    def test_numeral_that_is_an_abbreviation_stays_whole(self):
+        cases = {
+            "MM. Dupont et Durand sont venus.":
+                ["MM. Dupont et Durand sont venus."],
+            "O MM. Juiz decidiu.": ["O MM. Juiz decidiu."],
+            "SS.MM. Los Reyes llegaron.": ["SS.MM. Los Reyes llegaron."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_consonant_letters_with_vowel_names_are_not_vowels(self):
+        # TURNED Y, TURNED Y WITH BELT, Y WITH HOOK and OI (GHA)
+        self.assertEqual(set("ʎ\U0001DF06ƳƴƢƣ") & _VOWELS, set())
 
     def test_numeral_letter_is_still_an_initial(self):
         for letter in "CDMXVL":
