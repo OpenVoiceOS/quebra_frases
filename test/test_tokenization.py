@@ -59,6 +59,24 @@ class TestSentenceTokenize(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(sentence_tokenize(text), expected)
 
+    def test_word_with_other_latin_vowel_ends_sentence(self):
+        cases = {
+            "C'est très. Il part.": ["C'est très.", "Il part."],
+            "Widział ją. Potem wyszedł.": ["Widział ją.", "Potem wyszedł."],
+            "Jeg spiste brød. Det var godt.": ["Jeg spiste brød.",
+                                               "Det var godt."],
+            "Jeg så en bjørn. Den løp.": ["Jeg så en bjørn.", "Den løp."],
+            "Bu bir kız. O gitti.": ["Bu bir kız.", "O gitti."],
+            "Bu şəhər. Orada yaşayıram.": ["Bu şəhər.", "Orada yaşayıram."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_abbreviation_with_superscript_letter(self):
+        self.assertEqual(sentence_tokenize("A Srª. Costa chegou. Fim."),
+                         ["A Srª. Costa chegou.", "Fim."])
+
     def test_initial_of_other_script_not_sentence_end(self):
         self.assertEqual(sentence_tokenize("А. С. Пушкин написал. Конец."),
                          ["А. С. Пушкин написал.", "Конец."])

@@ -1,5 +1,7 @@
-import regex as re
+import unicodedata
 from itertools import groupby
+
+import regex as re
 
 
 # \p{M} (combining marks) belongs with \p{L}: Thai, Devanagari, Bengali,
@@ -25,7 +27,21 @@ _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
 # Unicode has no vowel property, and abjads such as Arabic and Hebrew do not
 # write most vowels at all, so the consonant-only test holds only for Latin
 _LATIN_WORD = re.compile(r"[\p{Latin}']+")
-_VOWELS = set("aeiouyAEIOUYáàâãéêíóôõúüÁÀÂÃÉÊÍÓÔÕÚÜ")
+# A Latin letter is a vowel when NFD takes it to a, e, i, o, u or y ("è",
+# "ü", "ą"), or to one of the letters below ("ǿ" to "ø"). NFD leaves these
+# letters whole. Each one is a vowel by its Unicode character name: the base
+# letter of the name is a vowel or a vowel ligature, as in LATIN SMALL
+# LETTER AE, O WITH STROKE, DOTLESS I, SCHWA, OPEN E, OPEN O and LIGATURE OE.
+# Modifier letters are not in the list, so "Srª." stays an abbreviation.
+_VOWELS = set(
+    "aeiouyAEIOUY"
+    "ÆØæøıĲĳŒœƆƎƏƐƖƗƟƢƣƱƳƴǝȢȣȺɄɆɇɎɏɐɑ"
+    "ɒɔɘəɚɛɜɝɞɨɩɪɵɶɷʉʊʎʏʚᴀᴁᴂᴇᴈᴉᴏᴐᴑᴒᴓᴔ"
+    "ᴕᴖᴗᴜᴝᴞᵫᵻᵼᵾᵿᶏᶐᶒᶓᶔᶕᶖᶗᶙẚỾỿⱥⱭⱯⱰⱸⱺⱻꜲꜳ"
+    "ꜴꜵꜶꜷꜸꜹꜺꜻꜼꜽꝊꝋꝌꝍꝎꝏꞚꞛꞜꞝꞞꞟꞫꞮꞶꞷꞸꞹꞺꞻꞼꞽ"
+    "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
+    "ＥＩＯＵＹａｅｉｏｕｙ𝼆𝼚𝼛"
+)
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
 
 
@@ -38,7 +54,8 @@ def _is_abbreviation(word):
         return False
     if len(word) == 1:
         return True
-    if _LATIN_WORD.fullmatch(word) and not any(ch in _VOWELS for ch in word):
+    if _LATIN_WORD.fullmatch(word) and not any(
+            ch in _VOWELS for ch in unicodedata.normalize("NFD", word)):
         return True
     return word.lower() in _ABBREVIATIONS
 
