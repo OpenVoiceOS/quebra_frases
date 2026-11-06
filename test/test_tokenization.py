@@ -108,6 +108,25 @@ class TestSentenceTokenize(unittest.TestCase):
         self.assertEqual(sentence_tokenize("Vale ². depois"),
                          ["Vale ².", "depois"])
 
+    def test_capital_word_that_is_not_a_numeral_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Mostre o ID. depois entre."),
+                         ["Mostre o ID.", "depois entre."])
+        self.assertEqual(sentence_tokenize("IIIII. depois"),
+                         ["IIIII.", "depois"])
+
+    def test_lowercase_word_that_spells_a_numeral_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Eu vi. depois saí."),
+                         ["Eu vi.", "depois saí."])
+
+    def test_ordinal_at_start_of_text_stays_whole(self):
+        self.assertEqual(sentence_tokenize("3. de maio foi o dia."),
+                         ["3. de maio foi o dia."])
+
+    def test_titlecase_digraph_after_number_ends_sentence(self):
+        # "Ǆ" is a capital, but its title case "ǅ" differs from it
+        self.assertEqual(sentence_tokenize("Tenho 3. Ǆep ok."),
+                         ["Tenho 3.", "Ǆep ok."])
+
     def test_georgian_sentence_after_number_splits(self):
         self.assertEqual(sentence_tokenize("ფასი არის 3. შემდეგ ის წავიდა."),
                          ["ფასი არის 3.", "შემდეგ ის წავიდა."])

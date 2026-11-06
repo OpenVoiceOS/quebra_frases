@@ -24,7 +24,10 @@ _WORD_REGEX = re.compile(
 _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
 _VOWELS = set("aeiouyAEIOUYáàâãéêíóôõúüÁÀÂÃÉÊÍÓÔÕÚÜ")
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
-_ROMAN_NUMERAL = re.compile(r"[IVXLCDM]+")
+# a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
+# letters that are not numerals ("ID", "IIIII") do not match
+_ROMAN_NUMERAL = re.compile(
+    r"(?=[IVXLCDM])M{0,3}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})")
 
 
 def _is_abbreviation(word):
