@@ -81,6 +81,33 @@ class TestSentenceTokenize(unittest.TestCase):
         self.assertEqual(sentence_tokenize("А. С. Пушкин написал. Конец."),
                          ["А. С. Пушкин написал.", "Конец."])
 
+    def test_roman_numeral_without_vowel_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("O século XX. Acabou."),
+                         ["O século XX.", "Acabou."])
+        self.assertEqual(sentence_tokenize("Comprei um CD. Depois saí."),
+                         ["Comprei um CD.", "Depois saí."])
+        self.assertEqual(sentence_tokenize("O século XX. acabou."),
+                         ["O século XX. acabou."])
+
+    def test_numeral_letter_is_still_an_initial(self):
+        for letter in "CDMXVL":
+            text = f"{letter}. Silva chegou. Fim."
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text),
+                                 [f"{letter}. Silva chegou.", "Fim."])
+        self.assertEqual(sentence_tokenize("J. C. Silva chegou. Fim."),
+                         ["J. C. Silva chegou.", "Fim."])
+
+    def test_abbreviation_with_other_latin_consonant(self):
+        self.assertEqual(sentence_tokenize("Płk. Nowak przyszedł. Koniec."),
+                         ["Płk. Nowak przyszedł.", "Koniec."])
+        self.assertEqual(sentence_tokenize("Św. Jan przyszedł. Koniec."),
+                         ["Św. Jan przyszedł.", "Koniec."])
+
+    def test_abbreviation_with_apostrophe(self):
+        self.assertEqual(sentence_tokenize("O D'r. Silva veio."),
+                         ["O D'r. Silva veio."])
+
     def test_lowercase_latin_abbreviation(self):
         sents = sentence_tokenize("Custa 3 euros, i.e. pouco. Fim.")
         self.assertEqual(sents, ["Custa 3 euros, i.e. pouco.", "Fim."])

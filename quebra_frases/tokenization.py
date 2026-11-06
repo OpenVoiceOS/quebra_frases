@@ -29,18 +29,21 @@ _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
 _LATIN_WORD = re.compile(r"[\p{Latin}']+")
 # A Latin letter is a vowel when NFD takes it to a, e, i, o, u or y ("è",
 # "ü", "ą"), or to one of the letters below ("ǿ" to "ø"). NFD leaves these
-# letters whole. Each one is a vowel by its Unicode character name: the base
-# letter of the name is a vowel or a vowel ligature, as in LATIN SMALL
-# LETTER AE, O WITH STROKE, DOTLESS I, SCHWA, OPEN E, OPEN O and LIGATURE OE.
+# letters whole. Each one has a Unicode character name that holds a vowel
+# or a vowel ligature, as in LATIN SMALL LETTER AE, O WITH STROKE, DOTLESS I,
+# SCHWA, OPEN E, LIGATURE OE and LIGATURE FI. Letters whose name holds a
+# vowel but which stand for a consonant are left out: TURNED Y and TURNED Y
+# WITH BELT (lateral consonants in Unicode NamesList.txt), Y WITH HOOK (a
+# palatal in Fula and Hausa) and OI (formal alias GHA in NameAliases.txt).
 # Modifier letters are not in the list, so "Srª." stays an abbreviation.
 _VOWELS = set(
     "aeiouyAEIOUY"
-    "ÆØæøıĲĳŒœƆƎƏƐƖƗƟƢƣƱƳƴǝȢȣȺɄɆɇɎɏɐɑ"
-    "ɒɔɘəɚɛɜɝɞɨɩɪɵɶɷʉʊʎʏʚᴀᴁᴂᴇᴈᴉᴏᴐᴑᴒᴓᴔ"
+    "ÆØæøıĲĳŒœƆƎƏƐƖƗƟƱǝȢȣȺɄɆɇɎɏɐɑ"
+    "ɒɔɘəɚɛɜɝɞɨɩɪɵɶɷʉʊʏʚᴀᴁᴂᴇᴈᴉᴏᴐᴑᴒᴓᴔ"
     "ᴕᴖᴗᴜᴝᴞᵫᵻᵼᵾᵿᶏᶐᶒᶓᶔᶕᶖᶗᶙẚỾỿⱥⱭⱯⱰⱸⱺⱻꜲꜳ"
     "ꜴꜵꜶꜷꜸꜹꜺꜻꜼꜽꝊꝋꝌꝍꝎꝏꞚꞛꞜꞝꞞꞟꞫꞮꞶꞷꞸꞹꞺꞻꞼꞽ"
     "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
-    "ＥＩＯＵＹａｅｉｏｕｙ𝼆𝼚𝼛"
+    "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
 # a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
@@ -52,14 +55,16 @@ _ROMAN_NUMERAL = re.compile(
 def _is_abbreviation(word):
     # a period does not end a sentence when the token before it is:
     # - a single letter (initials: "D.", "J.")
-    # - a consonant-only Latin token (abbreviations like "Dr.", "Srs.")
+    # - a consonant-only Latin token that is not a Roman numeral
+    #   (abbreviations like "Dr.", "Srs.", but not "XX.")
     # - a known short abbreviation that the two rules above miss
     if not word:
         return False
     if len(word) == 1:
         return True
-    if _LATIN_WORD.fullmatch(word) and not any(
-            ch in _VOWELS for ch in unicodedata.normalize("NFD", word)):
+    if _LATIN_WORD.fullmatch(word) and not _ROMAN_NUMERAL.fullmatch(word) \
+            and not any(ch in _VOWELS
+                        for ch in unicodedata.normalize("NFD", word)):
         return True
     return word.lower() in _ABBREVIATIONS
 
