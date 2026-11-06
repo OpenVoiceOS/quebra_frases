@@ -46,6 +46,41 @@ class TestSentenceTokenize(unittest.TestCase):
         sents = sentence_tokenize("J. R. R. Tolkien wrote it. It sold.")
         self.assertEqual(sents, ["J. R. R. Tolkien wrote it.", "It sold."])
 
+    def test_word_of_other_script_ends_sentence(self):
+        cases = {
+            "Привет мир. Как дела?": ["Привет мир.", "Как дела?"],
+            "Γεια σου κόσμε. Τι κάνεις;": ["Γεια σου κόσμε.", "Τι κάνεις;"],
+            "გამარჯობა მსოფლიო. როგორ ხარ?": ["გამარჯობა მსოფლიო.",
+                                              "როგორ ხარ?"],
+            "Բարև աշխարհ. Ինչպես ես?": ["Բարև աշխարհ.", "Ինչպես ես?"],
+            "ذهب. ثم عاد.": ["ذهب.", "ثم عاد."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_word_with_other_latin_vowel_ends_sentence(self):
+        cases = {
+            "C'est très. Il part.": ["C'est très.", "Il part."],
+            "Widział ją. Potem wyszedł.": ["Widział ją.", "Potem wyszedł."],
+            "Jeg spiste brød. Det var godt.": ["Jeg spiste brød.",
+                                               "Det var godt."],
+            "Jeg så en bjørn. Den løp.": ["Jeg så en bjørn.", "Den løp."],
+            "Bu bir kız. O gitti.": ["Bu bir kız.", "O gitti."],
+            "Bu şəhər. Orada yaşayıram.": ["Bu şəhər.", "Orada yaşayıram."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_abbreviation_with_superscript_letter(self):
+        self.assertEqual(sentence_tokenize("A Srª. Costa chegou. Fim."),
+                         ["A Srª. Costa chegou.", "Fim."])
+
+    def test_initial_of_other_script_not_sentence_end(self):
+        self.assertEqual(sentence_tokenize("А. С. Пушкин написал. Конец."),
+                         ["А. С. Пушкин написал.", "Конец."])
+
     def test_lowercase_latin_abbreviation(self):
         sents = sentence_tokenize("Custa 3 euros, i.e. pouco. Fim.")
         self.assertEqual(sents, ["Custa 3 euros, i.e. pouco.", "Fim."])
