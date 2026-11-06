@@ -70,6 +70,20 @@ class TestSentenceTokenize(unittest.TestCase):
             ["Acabou?", "Sim.", "Fim!"],
         )
 
+    def test_ordinal_before_lowercase_not_sentence_end(self):
+        self.assertEqual(sentence_tokenize("No dia 3. de maio."),
+                         ["No dia 3. de maio."])
+        self.assertEqual(sentence_tokenize("O século XIV. acabou."),
+                         ["O século XIV. acabou."])
+        self.assertEqual(sentence_tokenize("No dia ٣. de maio."),
+                         ["No dia ٣. de maio."])
+
+    def test_number_before_capital_still_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Tenho 3. Ele tem 4."),
+                         ["Tenho 3.", "Ele tem 4."])
+        self.assertEqual(sentence_tokenize("O século XIV. Acabou."),
+                         ["O século XIV.", "Acabou."])
+
 
 if __name__ == "__main__":
     unittest.main()

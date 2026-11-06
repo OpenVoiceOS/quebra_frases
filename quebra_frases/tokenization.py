@@ -12,6 +12,7 @@ _WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b[\p{L}\p{M}]*(?:\.[\p{L}\p
 _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
 _VOWELS = set("aeiouyAEIOUYáàâãéêíóôõúüÁÀÂÃÉÊÍÓÔÕÚÜ")
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+_ROMAN_NUMERAL = re.compile(r"[IVXLCDM]+")
 
 
 def _is_abbreviation(word):
@@ -53,6 +54,12 @@ def sentence_tokenize(input_string):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
             if _is_abbreviation(word):
+                continue
+            # an ordinal ("3. de maio", "XIV. acabou") does not end the
+            # sentence when the next word goes on in lower case
+            ordinal = input_string[split_at - 2:split_at - 1].isdigit() or \
+                _ROMAN_NUMERAL.fullmatch(word)
+            if ordinal and input_string[m.end():m.end() + 1].islower():
                 continue
         sentences.append(input_string[last:split_at])
         last = m.end()
