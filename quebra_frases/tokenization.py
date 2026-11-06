@@ -22,6 +22,9 @@ _WORD_REGEX = re.compile(
 # the whole whitespace run, not one character of it: matching a single
 # space leaves the rest of the run at the head of the next sentence
 _SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
+# Unicode has no vowel property, and abjads such as Arabic and Hebrew do not
+# write most vowels at all, so the consonant-only test holds only for Latin
+_LATIN_WORD = re.compile(r"[\p{Latin}']+")
 _VOWELS = set("aeiouyAEIOUYáàâãéêíóôõúüÁÀÂÃÉÊÍÓÔÕÚÜ")
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
 
@@ -29,13 +32,13 @@ _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "
 def _is_abbreviation(word):
     # a period does not end a sentence when the token before it is:
     # - a single letter (initials: "D.", "J.")
-    # - a consonant-only token (abbreviations like "Dr.", "Srs.")
+    # - a consonant-only Latin token (abbreviations like "Dr.", "Srs.")
     # - a known short abbreviation that the two rules above miss
     if not word:
         return False
     if len(word) == 1:
         return True
-    if not any(ch in _VOWELS for ch in word):
+    if _LATIN_WORD.fullmatch(word) and not any(ch in _VOWELS for ch in word):
         return True
     return word.lower() in _ABBREVIATIONS
 
