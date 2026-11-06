@@ -68,10 +68,20 @@ def sentence_tokenize(input_string):
             if _is_abbreviation(word):
                 continue
             # an ordinal ("3. de maio", "XIV. acabou") does not end the
-            # sentence when the next word goes on in lower case
-            ordinal = input_string[split_at - 2:split_at - 1].isdigit() or \
-                _ROMAN_NUMERAL.fullmatch(word)
-            if ordinal and input_string[m.end():m.end() + 1].islower():
+            # sentence when the next word goes on in lower case. The number
+            # must stand alone: "14:30.", "2,50." and "COVID-19." end in a
+            # digit but are not ordinals.
+            k = split_at - 1
+            while k > 0 and input_string[k - 1].isdecimal():
+                k -= 1
+            bare_number = k < split_at - 1 and \
+                (k == 0 or input_string[k - 1].isspace())
+            ordinal = bare_number or _ROMAN_NUMERAL.fullmatch(word)
+            # Georgian letters count as lowercase, but a Georgian sentence
+            # starts with them too. Title case leaves them unchanged, so only
+            # a letter that title case changes shows the sentence goes on.
+            nxt = input_string[m.end():m.end() + 1]
+            if ordinal and nxt.islower() and nxt != nxt.title():
                 continue
         sentences.append(input_string[last:split_at])
         last = m.end()
