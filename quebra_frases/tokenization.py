@@ -43,6 +43,10 @@ _VOWELS = set(
     "ＥＩＯＵＹａｅｉｏｕｙ𝼆𝼚𝼛"
 )
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+# a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
+# letters that are not numerals ("ID", "IIIII") do not match
+_ROMAN_NUMERAL = re.compile(
+    r"(?=[IVXLCDM])M{0,3}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})")
 
 
 def _is_abbreviation(word):
@@ -85,6 +89,22 @@ def sentence_tokenize(input_string):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
             if _is_abbreviation(word):
+                continue
+            # an ordinal ("3. de maio", "XIV. acabou") does not end the
+            # sentence when the next word goes on in lower case. The number
+            # must stand alone: "14:30.", "2,50." and "COVID-19." end in a
+            # digit but are not ordinals.
+            k = split_at - 1
+            while k > 0 and input_string[k - 1].isdecimal():
+                k -= 1
+            bare_number = k < split_at - 1 and \
+                (k == 0 or input_string[k - 1].isspace())
+            ordinal = bare_number or _ROMAN_NUMERAL.fullmatch(word)
+            # Georgian letters count as lowercase, but a Georgian sentence
+            # starts with them too. Title case leaves them unchanged, so only
+            # a letter that title case changes shows the sentence goes on.
+            nxt = input_string[m.end():m.end() + 1]
+            if ordinal and nxt.islower() and nxt != nxt.title():
                 continue
         sentences.append(input_string[last:split_at])
         last = m.end()

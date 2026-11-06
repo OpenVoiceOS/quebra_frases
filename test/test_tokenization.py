@@ -107,6 +107,65 @@ class TestSentenceTokenize(unittest.TestCase):
             ["Acabou?", "Sim.", "Fim!"],
         )
 
+    def test_ordinal_before_lowercase_not_sentence_end(self):
+        self.assertEqual(sentence_tokenize("No dia 3. de maio."),
+                         ["No dia 3. de maio."])
+        self.assertEqual(sentence_tokenize("O século XIV. acabou."),
+                         ["O século XIV. acabou."])
+        self.assertEqual(sentence_tokenize("No dia ٣. de maio."),
+                         ["No dia ٣. de maio."])
+
+    def test_number_before_capital_still_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Tenho 3. Ele tem 4."),
+                         ["Tenho 3.", "Ele tem 4."])
+        self.assertEqual(sentence_tokenize("O século XIV. Acabou."),
+                         ["O século XIV.", "Acabou."])
+
+    def test_ordinal_languages_stay_whole(self):
+        self.assertEqual(sentence_tokenize("Dnia 3. maja wyjechał."),
+                         ["Dnia 3. maja wyjechał."])
+        self.assertEqual(sentence_tokenize("A XIV. században élt."),
+                         ["A XIV. században élt."])
+
+    def test_word_before_lowercase_still_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Saiu. depois voltou."),
+                         ["Saiu.", "depois voltou."])
+
+    def test_number_that_is_not_an_ordinal_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Chegou às 14:30. depois saiu."),
+                         ["Chegou às 14:30.", "depois saiu."])
+        self.assertEqual(sentence_tokenize("Custa 2,50. depois pagou."),
+                         ["Custa 2,50.", "depois pagou."])
+        self.assertEqual(sentence_tokenize("Teve COVID-19. depois voltou."),
+                         ["Teve COVID-19.", "depois voltou."])
+        self.assertEqual(sentence_tokenize("Vale x². depois"),
+                         ["Vale x².", "depois"])
+        self.assertEqual(sentence_tokenize("Vale ². depois"),
+                         ["Vale ².", "depois"])
+
+    def test_capital_word_that_is_not_a_numeral_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Mostre o ID. depois entre."),
+                         ["Mostre o ID.", "depois entre."])
+        self.assertEqual(sentence_tokenize("IIIII. depois"),
+                         ["IIIII.", "depois"])
+
+    def test_lowercase_word_that_spells_a_numeral_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Eu vi. depois saí."),
+                         ["Eu vi.", "depois saí."])
+
+    def test_ordinal_at_start_of_text_stays_whole(self):
+        self.assertEqual(sentence_tokenize("3. de maio foi o dia."),
+                         ["3. de maio foi o dia."])
+
+    def test_titlecase_digraph_after_number_ends_sentence(self):
+        # "Ǆ" is a capital, but its title case "ǅ" differs from it
+        self.assertEqual(sentence_tokenize("Tenho 3. Ǆep ok."),
+                         ["Tenho 3.", "Ǆep ok."])
+
+    def test_georgian_sentence_after_number_splits(self):
+        self.assertEqual(sentence_tokenize("ფასი არის 3. შემდეგ ის წავიდა."),
+                         ["ფასი არის 3.", "შემდეგ ის წავიდა."])
+
 
 SENTENCES = [
     "O Dr. Silva pagou 2,50 € às 14:30. Custa $5, ou 20%! #FF0000 — fim",
