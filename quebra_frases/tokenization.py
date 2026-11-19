@@ -1,9 +1,81 @@
-import regex as re
+import unicodedata
 from itertools import groupby
 
+import regex as re
 
-_WORD_REGEX = re.compile(r"(?:-?\d+(?:[,.:\/]\d*)+)|\b\p{L}*(?:\.\p{L}+)+\.|[\p{L}\p{N}'-]+|[.,;:_!?<>|()=\[\]{}»«*~^`%\/\\\+#]", re.I)
-_SENTENCE_REGEX = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s')
+
+# \p{M} (combining marks) belongs with \p{L}: Thai, Devanagari, Bengali,
+# Tamil and other abugidas write vowel signs, viramas and tone marks as
+# Mn/Mc code points inside a word ("เพิ่ม", "नमस्ते"). Leaving them out of
+# the letter class made every mark end the token and vanish from the output.
+# ZWNJ and ZWJ (U+200C, U+200D) sit inside Persian and Indic words, and
+# Unicode word segmentation (UAX #29, rule WB4) never breaks a word at them.
+# A number ends on a digit: a separator with no digit after it is the
+# punctuation that follows the number ("14:30.", "5,"). U+066B and U+066C
+# are the Arabic decimal and thousands separators.
+# The last alternative makes any other character that is not space a token
+# of its own: punctuation, a currency sign, a dash or any other symbol. No
+# character is left out of the tokens.
+_WORD_REGEX = re.compile(
+    r"(?:-?\d+(?:[,.:\/\u066b\u066c]\d+)+)"
+    r"|\b[\p{L}\p{M}]*(?:\.[\p{L}\p{M}]+)+\."
+    r"|[\p{L}\p{M}\p{N}\u200c\u200d'-]+"
+    r"|\S", re.I)
+# the whole whitespace run, not one character of it: matching a single
+# space leaves the rest of the run at the head of the next sentence
+_SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
+# Unicode has no vowel property, and abjads such as Arabic and Hebrew do not
+# write most vowels at all, so the consonant-only test holds only for Latin
+_LATIN_WORD = re.compile(r"[\p{Latin}']+")
+# A Latin letter is a vowel when NFD takes it to a, e, i, o, u or y ("è",
+# "ü", "ą"), or to one of the letters below ("ǿ" to "ø"). NFD leaves these
+# letters whole. Each one has a Unicode character name that holds a vowel
+# or a vowel ligature, as in LATIN SMALL LETTER AE, O WITH STROKE, DOTLESS I,
+# SCHWA, OPEN E, LIGATURE OE and LIGATURE FI. Letters whose name holds a
+# vowel but which stand for a consonant are left out: TURNED Y (a lateral
+# approximant in Unicode NamesList.txt), TURNED Y WITH BELT (the belt marks
+# a lateral fricative, as in L WITH BELT), Y WITH HOOK (a palatal in Fula
+# and Hausa) and OI (formal alias GHA in NameAliases.txt).
+# Modifier letters are not in the list, so "Srª." stays an abbreviation.
+_VOWELS = set(
+    "aeiouyAEIOUY"
+    "ÆØæøıĲĳŒœƆƎƏƐƖƗƟƱǝȢȣȺɄɆɇɎɏɐɑ"
+    "ɒɔɘəɚɛɜɝɞɨɩɪɵɶɷʉʊʏʚᴀᴁᴂᴇᴈᴉᴏᴐᴑᴒᴓᴔ"
+    "ᴕᴖᴗᴜᴝᴞᵫᵻᵼᵾᵿᶏᶐᶒᶓᶔᶕᶖᶗᶙẚỾỿⱥⱭⱯⱰⱸⱺⱻꜲꜳ"
+    "ꜴꜵꜶꜷꜸꜹꜺꜻꜼꜽꝊꝋꝌꝍꝎꝏꞚꞛꞜꞝꞞꞟꞫꞮꞶꞷꞸꞹꞺꞻꞼꞽ"
+    "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
+    "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
+)
+_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+# capital words that are titles or doubled-letter plurals ("SR.", "EXMO.",
+# Spanish "RR.HH.", "DD.HH.", "VV.AA.", Portuguese "DD." Digníssimo); "PP"
+# and "SS" are left out because they are also party names ("PP.", "der SS.")
+_CAPITAL_ABBREVIATIONS = {"MM", "SR", "SRA", "SRS", "SRAS", "DR", "DRA", "DRS",
+                          "EXMO", "EXMA", "VS", "RR", "HH", "DD", "VV"}
+# a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
+# letters that are not numerals ("ID", "IIIII") do not match
+_ROMAN_NUMERAL = re.compile(
+    r"(?=[IVXLCDM])M{0,3}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})")
+
+
+def _is_abbreviation(word):
+    # a period does not end a sentence when the token before it is:
+    # - a single letter (initials: "D.", "J.")
+    # - a title or doubled-letter plural in capitals ("SR.", "MM.", "RR.HH.");
+    #   any other word of two or more capitals is an acronym ("TV.", "BBC.")
+    #   or a Roman numeral ("XX.") and ends the sentence
+    # - a consonant-only Latin token (abbreviations like "Dr.", "Srs.")
+    # - a known short abbreviation that the rules above miss
+    if not word:
+        return False
+    if len(word) == 1:
+        return True
+    if word.isupper():
+        return word in _CAPITAL_ABBREVIATIONS
+    if _LATIN_WORD.fullmatch(word) and not any(
+            ch in _VOWELS for ch in unicodedata.normalize("NFD", word)):
+        return True
+    return word.lower() in _ABBREVIATIONS
 
 
 def word_tokenize(input_string):
@@ -21,7 +93,37 @@ def span_indexed_word_tokenize(input_string):
 
 
 def sentence_tokenize(input_string):
-    return re.split(_SENTENCE_REGEX, input_string)
+    sentences = []
+    last = 0
+    for m in _SENTENCE_SPLIT_CANDIDATE.finditer(input_string):
+        split_at = m.start()
+        if input_string[split_at - 1] == '.':
+            j = split_at - 2
+            while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
+                j -= 1
+            word = input_string[j + 1:split_at - 1]
+            if _is_abbreviation(word):
+                continue
+            # an ordinal ("3. de maio", "XIV. acabou") does not end the
+            # sentence when the next word goes on in lower case. The number
+            # must stand alone: "14:30.", "2,50." and "COVID-19." end in a
+            # digit but are not ordinals.
+            k = split_at - 1
+            while k > 0 and input_string[k - 1].isdecimal():
+                k -= 1
+            bare_number = k < split_at - 1 and \
+                (k == 0 or input_string[k - 1].isspace())
+            ordinal = bare_number or _ROMAN_NUMERAL.fullmatch(word)
+            # Georgian letters count as lowercase, but a Georgian sentence
+            # starts with them too. Title case leaves them unchanged, so only
+            # a letter that title case changes shows the sentence goes on.
+            nxt = input_string[m.end():m.end() + 1]
+            if ordinal and nxt.islower() and nxt != nxt.title():
+                continue
+        sentences.append(input_string[last:split_at])
+        last = m.end()
+    sentences.append(input_string[last:])
+    return sentences
 
 
 def char_indexed_sentence_tokenize(input_string):
@@ -31,13 +133,17 @@ def char_indexed_sentence_tokenize(input_string):
 def span_indexed_sentence_tokenize(input_string):
     sentences = sentence_tokenize(input_string)
     spans = []
-    for idx, s in enumerate(sentences):
-        start_idx = sum(len(_) for _ in sentences[:idx])
-        if start_idx > 0:
-            # account for white spaces
-            start_idx += sum(1 for _ in sentences[:idx])
-        end_idx = start_idx + len(s)
+    cursor = 0
+    for sentence in sentences:
+        # locate each sentence in the source rather than adding up the
+        # lengths of the ones before it: that arithmetic assumes exactly one
+        # character between sentences and drifts wherever there are more
+        start_idx = input_string.find(sentence, cursor)
+        if start_idx < 0:
+            start_idx = cursor
+        end_idx = start_idx + len(sentence)
         spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
+        cursor = end_idx
     return spans
 
 
@@ -46,7 +152,11 @@ def paragraph_tokenize(input_string):
     for group_separator, chunk in groupby(input_string.splitlines(True),
                                           key=str.isspace):
         if group_separator:
-            paragraphs[-1] += list(chunk)
+            # a separator run belongs to the paragraph it follows; leading
+            # whitespace follows nothing, so there is no paragraph to attach
+            # it to and it is not a paragraph of its own
+            if paragraphs:
+                paragraphs[-1] += list(chunk)
         else:
             paragraphs.append(list(chunk))
     return [''.join(chunk) for chunk in paragraphs]
@@ -77,9 +187,10 @@ def get_empty_spans(input_string):
             if start is None:
                 start = idx
             if next_char is None:
-                end = idx
+                # the span end is exclusive, and idx is the last character
+                end = idx + 1
                 spans.append((start, end, input_string[start:end]))
-        elif start:
+        elif start is not None:
             end = idx
             spans.append((start, end, input_string[start:end]))
             start = None

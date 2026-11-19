@@ -1,41 +1,27 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/quebra_frases/tree/HEAD)
+## [0.3.8a3](https://github.com/OpenVoiceOS/quebra_frases/tree/0.3.8a3) (2026-11-19)
 
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/0.3.8a2...0.3.8a3)
+
+**Merged pull requests:**
+
+- Update stefanzweifel/git-auto-commit-action action to v7 [\#11](https://github.com/OpenVoiceOS/quebra_frases/pull/11) ([renovate[bot]](https://github.com/apps/renovate))
+- Update actions/setup-python action to v6 [\#10](https://github.com/OpenVoiceOS/quebra_frases/pull/10) ([renovate[bot]](https://github.com/apps/renovate))
+- Update actions/checkout action to v6 [\#9](https://github.com/OpenVoiceOS/quebra_frases/pull/9) ([renovate[bot]](https://github.com/apps/renovate))
+- Update dependency python to 3.14 [\#6](https://github.com/OpenVoiceOS/quebra_frases/pull/6) ([renovate[bot]](https://github.com/apps/renovate))
+
+## [0.3.8a2](https://github.com/OpenVoiceOS/quebra_frases/tree/0.3.8a2) (2026-11-19)
+
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.8a1...0.3.8a2)
+
+## [V0.3.8a1](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.8a1) (2025-12-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7...V0.3.8a1)
 
 **Merged pull requests:**
 
 - Configure Renovate [\#5](https://github.com/OpenVoiceOS/quebra_frases/pull/5) ([renovate[bot]](https://github.com/apps/renovate))
-
-## [V0.3.7](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7) (2023-08-15)
-
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7a2...V0.3.7)
-
-## [V0.3.7a2](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7a2) (2023-08-15)
-
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/V0.3.7a1...V0.3.7a2)
-
-## [V0.3.7a1](https://github.com/OpenVoiceOS/quebra_frases/tree/V0.3.7a1) (2023-08-15)
-
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/v0.2.0...V0.3.7a1)
-
-**Implemented enhancements:**
-
-- extend tokenizer regex [\#1](https://github.com/OpenVoiceOS/quebra_frases/pull/1) ([emphasize](https://github.com/emphasize))
-
-**Fixed bugs:**
-
-- fix negative float [\#3](https://github.com/OpenVoiceOS/quebra_frases/pull/3) ([emphasize](https://github.com/emphasize))
-
-**Merged pull requests:**
-
-- add versioning tools [\#4](https://github.com/OpenVoiceOS/quebra_frases/pull/4) ([emphasize](https://github.com/emphasize))
--  fix requirements [\#2](https://github.com/OpenVoiceOS/quebra_frases/pull/2) ([emphasize](https://github.com/emphasize))
-
-## [v0.2.0](https://github.com/OpenVoiceOS/quebra_frases/tree/v0.2.0) (2021-04-15)
-
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/e91d2e95328c8fe630d6a21d1f1d04256d43e652...v0.2.0)
 
 
 
