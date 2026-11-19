@@ -47,6 +47,11 @@ _VOWELS = set(
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+# capital words that are titles or doubled-letter plurals ("SR.", "EXMO.",
+# Spanish "RR.HH.", "DD.HH.", "VV.AA.", Portuguese "DD." Digníssimo); "PP"
+# and "SS" are left out because they are also party names ("PP.", "der SS.")
+_CAPITAL_ABBREVIATIONS = {"MM", "SR", "SRA", "SRS", "SRAS", "DR", "DRA", "DRS",
+                          "EXMO", "EXMA", "VS", "RR", "HH", "DD", "VV"}
 # a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
 # letters that are not numerals ("ID", "IIIII") do not match
 _ROMAN_NUMERAL = re.compile(
@@ -56,9 +61,9 @@ _ROMAN_NUMERAL = re.compile(
 def _is_abbreviation(word):
     # a period does not end a sentence when the token before it is:
     # - a single letter (initials: "D.", "J.")
-    # - "MM" (French Messieurs, Portuguese Meritíssimo, Spanish SS.MM.); any
-    #   other word of two or more capitals is an acronym ("TV.", "BBC.") or
-    #   a Roman numeral ("XX.") and ends the sentence
+    # - a title or doubled-letter plural in capitals ("SR.", "MM.", "RR.HH.");
+    #   any other word of two or more capitals is an acronym ("TV.", "BBC.")
+    #   or a Roman numeral ("XX.") and ends the sentence
     # - a consonant-only Latin token (abbreviations like "Dr.", "Srs.")
     # - a known short abbreviation that the rules above miss
     if not word:
@@ -66,7 +71,7 @@ def _is_abbreviation(word):
     if len(word) == 1:
         return True
     if word.isupper():
-        return word == "MM"
+        return word in _CAPITAL_ABBREVIATIONS
     if _LATIN_WORD.fullmatch(word) and not any(
             ch in _VOWELS for ch in unicodedata.normalize("NFD", word)):
         return True

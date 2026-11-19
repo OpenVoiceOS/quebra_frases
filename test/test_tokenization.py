@@ -101,6 +101,25 @@ class TestSentenceTokenize(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(sentence_tokenize(text), expected)
 
+    def test_title_or_doubled_plural_in_capitals_stays_in_sentence(self):
+        cases = {
+            "A SRA. COSTA CHEGOU. FIM.": ["A SRA. COSTA CHEGOU.", "FIM."],
+            "EXMO. SR. DIRETOR, ESCREVO-LHE. OBRIGADO.":
+                ["EXMO. SR. DIRETOR, ESCREVO-LHE.", "OBRIGADO."],
+            "BENFICA VS. PORTO ACABOU. FIM.": ["BENFICA VS. PORTO ACABOU.", "FIM."],
+            "Trabaja en RR.HH. de una empresa. Le gusta.":
+                ["Trabaja en RR.HH. de una empresa.", "Le gusta."],
+            "La defensa de los DD.HH. es un deber. Todos lo saben.":
+                ["La defensa de los DD.HH. es un deber.", "Todos lo saben."],
+            "O DD. Promotor pediu a palavra. O juiz deu.":
+                ["O DD. Promotor pediu a palavra.", "O juiz deu."],
+            "Er war in der SS. Das wusste niemand.":
+                ["Er war in der SS.", "Das wusste niemand."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
     def test_acronym_in_capitals_ends_sentence(self):
         cases = {
             "I watched it on TV. It was good.":
