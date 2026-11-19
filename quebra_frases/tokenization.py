@@ -46,7 +46,10 @@ _VOWELS = set(
     "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
-_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+# "cf", "p" ("p. ex.", "p. 12") and "v" (versus, "Roe v. Wade") are listed:
+# an unlisted lowercase token ends the sentence
+_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num",
+                  "cf", "p", "v"}
 # capital words that are titles or doubled-letter plurals ("SR.", "EXMO.",
 # Spanish "RR.HH.", "DD.HH.", "VV.AA.", Portuguese "DD." Digníssimo); "PP"
 # and "SS" are left out because they are also party names ("PP.", "der SS.")
@@ -103,7 +106,17 @@ def sentence_tokenize(input_string):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
             if _is_abbreviation(word):
-                continue
+                # A lowercase token ends the sentence as a word or a unit does
+                # ("3 kg. Pesa", "cd. ef.", "um x. Dois") unless it is listed
+                # or a letter of a dotted abbreviation ("i.e.", "a. C.").
+                # Title case leaves a Georgian letter unchanged, so a Georgian
+                # initial counts as a capital.
+                capital = word[0] == word[0].title()
+                listed = word.lower() in _ABBREVIATIONS
+                dotted = (j >= 0 and input_string[j] == ".") or \
+                    re.match(r"\p{L}\.(?!\.)", input_string[m.end():m.end() + 3])
+                if capital or listed or len(word) == 1 and dotted:
+                    continue
             # an ordinal ("3. de maio", "XIV. acabou") does not end the
             # sentence when the next word goes on in lower case. The number
             # must stand alone: "14:30.", "2,50." and "COVID-19." end in a

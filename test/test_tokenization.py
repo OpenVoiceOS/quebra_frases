@@ -222,6 +222,8 @@ class TestSentenceTokenize(unittest.TestCase):
                          ["Dnia 3. maja wyjechał."])
         self.assertEqual(sentence_tokenize("A XIV. században élt."),
                          ["A XIV. században élt."])
+        self.assertEqual(sentence_tokenize("XX. mendean 1990. urtean jaio zen."),
+                         ["XX. mendean 1990. urtean jaio zen."])
 
     def test_word_before_lowercase_still_ends_sentence(self):
         self.assertEqual(sentence_tokenize("Saiu. depois voltou."),
@@ -261,6 +263,49 @@ class TestSentenceTokenize(unittest.TestCase):
     def test_georgian_sentence_after_number_splits(self):
         self.assertEqual(sentence_tokenize("ფასი არის 3. შემდეგ ის წავიდა."),
                          ["ფასი არის 3.", "შემდეგ ის წავიდა."])
+
+    def test_unit_symbol_before_capital_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Tem 3 kg. Pesa muito."),
+                         ["Tem 3 kg.", "Pesa muito."])
+
+    def test_lowercase_single_letter_before_capital_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Um x. Dois; três."),
+                         ["Um x.", "Dois; três."])
+
+    def test_lowercase_word_without_vowel_ends_sentence(self):
+        self.assertEqual(
+            sentence_tokenize("Não apenas o http. Eles oferecem mais."),
+            ["Não apenas o http.", "Eles oferecem mais."])
+        self.assertEqual(sentence_tokenize("ab cd. ef."), ["ab cd.", "ef."])
+        self.assertEqual(sentence_tokenize("Veja www.exemplo.pt. Depois saia."),
+                         ["Veja www.exemplo.pt.", "Depois saia."])
+
+    def test_lowercase_letter_before_lowercase_word_ends_sentence(self):
+        # "a" is a pronoun here, not an abbreviation
+        self.assertEqual(sentence_tokenize("Vi-a. depois saí."),
+                         ["Vi-a.", "depois saí."])
+        # an ellipsis after the next letter is no dotted abbreviation
+        self.assertEqual(sentence_tokenize("Escreve x. k... e para."),
+                         ["Escreve x.", "k...", "e para."])
+
+    def test_georgian_initial_not_sentence_end(self):
+        # Georgian has no capitals in running text, so its initials stay
+        self.assertEqual(sentence_tokenize("ი. ჭავჭავაძე დაიბადა. დასასრული."),
+                         ["ი. ჭავჭავაძე დაიბადა.", "დასასრული."])
+
+    def test_lowercase_abbreviation_keeps_sentence_whole(self):
+        cases = [
+            "See etc. for more.",
+            "Ver o sol — cf. ilustração 1.",
+            "Exactamente a las 8:46 a. m., la ciudad se volvió silenciosa.",
+            "Leve outros documentos (p. ex., visto).",
+            "Cerca del año 1000 a. C., los asirios llegaron.",
+            "Roe v. Wade was the law.",
+            "Many cities, e.g. Paris, have one.",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), [text])
 
 
 SENTENCES = [
