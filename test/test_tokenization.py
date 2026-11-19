@@ -101,6 +101,59 @@ class TestSentenceTokenize(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(sentence_tokenize(text), expected)
 
+    def test_title_or_doubled_plural_in_capitals_stays_in_sentence(self):
+        cases = {
+            "A SRA. COSTA CHEGOU. FIM.": ["A SRA. COSTA CHEGOU.", "FIM."],
+            "EXMO. SR. DIRETOR, ESCREVO-LHE. OBRIGADO.":
+                ["EXMO. SR. DIRETOR, ESCREVO-LHE.", "OBRIGADO."],
+            "BENFICA VS. PORTO ACABOU. FIM.": ["BENFICA VS. PORTO ACABOU.", "FIM."],
+            "Trabaja en RR.HH. de una empresa. Le gusta.":
+                ["Trabaja en RR.HH. de una empresa.", "Le gusta."],
+            "La defensa de los DD.HH. es un deber. Todos lo saben.":
+                ["La defensa de los DD.HH. es un deber.", "Todos lo saben."],
+            "O DD. Promotor pediu a palavra. O juiz deu.":
+                ["O DD. Promotor pediu a palavra.", "O juiz deu."],
+            "Er war in der SS. Das wusste niemand.":
+                ["Er war in der SS.", "Das wusste niemand."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_acronym_in_capitals_ends_sentence(self):
+        cases = {
+            "I watched it on TV. It was good.":
+                ["I watched it on TV.", "It was good."],
+            "We met at the BBC. Then we left.":
+                ["We met at the BBC.", "Then we left."],
+            "I heard it on CNN. Nobody believed it.":
+                ["I heard it on CNN.", "Nobody believed it."],
+            "Send me an SMS. I will call back.":
+                ["Send me an SMS.", "I will call back."],
+            "The file is 20 MB. It fits.": ["The file is 20 MB.", "It fits."],
+            "Vi na RTP. Depois saí.": ["Vi na RTP.", "Depois saí."],
+            "Mandei o PDF. Ainda não respondeu.":
+                ["Mandei o PDF.", "Ainda não respondeu."],
+            "Votou no PSD. O irmão votou no PS.":
+                ["Votou no PSD.", "O irmão votou no PS."],
+            "O ficheiro tem 5 GB. Cabe no disco.":
+                ["O ficheiro tem 5 GB.", "Cabe no disco."],
+            "Lo anunció la DGT. Habrá controles.":
+                ["Lo anunció la DGT.", "Habrá controles."],
+            "Votó al PP. Luego se fue.": ["Votó al PP.", "Luego se fue."],
+            "Il travaille à la SNCF. Sa femme aussi.":
+                ["Il travaille à la SNCF.", "Sa femme aussi."],
+            "Elle a voté pour le PS. Lui non.":
+                ["Elle a voté pour le PS.", "Lui non."],
+            "Das lief im ZDF. Danach ging ich.":
+                ["Das lief im ZDF.", "Danach ging ich."],
+            "Er wählt die SPD. Sie wählt die CDU.":
+                ["Er wählt die SPD.", "Sie wählt die CDU."],
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
     def test_consonant_letters_with_vowel_names_are_not_vowels(self):
         # TURNED Y, TURNED Y WITH BELT, Y WITH HOOK and OI (GHA)
         self.assertEqual(set("ʎ\U0001DF06ƳƴƢƣ") & _VOWELS, set())
