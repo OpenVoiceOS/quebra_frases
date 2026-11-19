@@ -46,10 +46,7 @@ _VOWELS = set(
     "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
-# "mm" (French Messieurs, Portuguese Meritíssimo, Spanish SS.MM.) is also
-# the numeral MM, so the consonant-only rule does not keep it
-_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num",
-                  "mm"}
+_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
 # a well-formed Roman numeral from I to MMMCMXCIX; capital words of the same
 # letters that are not numerals ("ID", "IIIII") do not match
 _ROMAN_NUMERAL = re.compile(
@@ -59,16 +56,19 @@ _ROMAN_NUMERAL = re.compile(
 def _is_abbreviation(word):
     # a period does not end a sentence when the token before it is:
     # - a single letter (initials: "D.", "J.")
-    # - a consonant-only Latin token that is not a Roman numeral
-    #   (abbreviations like "Dr.", "Srs.", but not "XX.")
-    # - a known short abbreviation that the two rules above miss
+    # - "MM" (French Messieurs, Portuguese Meritíssimo, Spanish SS.MM.); any
+    #   other word of two or more capitals is an acronym ("TV.", "BBC.") or
+    #   a Roman numeral ("XX.") and ends the sentence
+    # - a consonant-only Latin token (abbreviations like "Dr.", "Srs.")
+    # - a known short abbreviation that the rules above miss
     if not word:
         return False
     if len(word) == 1:
         return True
-    if _LATIN_WORD.fullmatch(word) and not _ROMAN_NUMERAL.fullmatch(word) \
-            and not any(ch in _VOWELS
-                        for ch in unicodedata.normalize("NFD", word)):
+    if word.isupper():
+        return word == "MM"
+    if _LATIN_WORD.fullmatch(word) and not any(
+            ch in _VOWELS for ch in unicodedata.normalize("NFD", word)):
         return True
     return word.lower() in _ABBREVIATIONS
 
