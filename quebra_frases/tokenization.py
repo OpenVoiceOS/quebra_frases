@@ -56,9 +56,10 @@ _WORD_REGEX = re.compile(
 # it before any non-space character. Closing brackets and quotes stay with
 # the sentence they close (UAX #29 rule SB11). The fullwidth full stop is not
 # in that list, because it also separates the digits of a number ("３．５").
-# Two marks with the property do not end a sentence. The Unicode chart glosses
-# U+104A, Myanmar little section, as a pause; U+104B is the full stop. U+2024,
-# one dot leader, stands in for the Armenian mijaket, a colon, in running text.
+# Two marks with the property do not end a sentence. In Burmese, U+104A and
+# U+104B have "significance close to comma and full stop, respectively"
+# (r12a, Myanmar (Burmese) orthography notes, W3C). U+2024, one dot leader,
+# is "also used as an Armenian semicolon (mijaket)" (Unicode NamesList).
 _SENTENCE_CLOSE = r"[\p{Pe}\p{Pf}\"']"
 _SENTENCE_SPLIT_CANDIDATE = re.compile(
     r"(?<=\p{Sentence_Terminal})(?<![\u104a\u2024])\s+"
