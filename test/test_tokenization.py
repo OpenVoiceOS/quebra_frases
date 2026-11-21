@@ -262,6 +262,70 @@ class TestSentenceTokenize(unittest.TestCase):
         self.assertEqual(sentence_tokenize("ფასი არის 3. შემდეგ ის წავიდა."),
                          ["ფასი არის 3.", "შემდეგ ის წავიდა."])
 
+    def test_unit_symbol_after_number_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Tem 3 kg. Pesa muito."),
+                         ["Tem 3 kg.", "Pesa muito."])
+        self.assertEqual(sentence_tokenize("Ia a 160 km/h. Mais ninguém viu."),
+                         ["Ia a 160 km/h.", "Mais ninguém viu."])
+        self.assertEqual(sentence_tokenize("O carro emite 120 g/km. Mais nada."),
+                         ["O carro emite 120 g/km.", "Mais nada."])
+
+    def test_unit_symbol_before_lowercase_word_stays_in_sentence(self):
+        self.assertEqual(sentence_tokenize("Tiene 3 m. de largo."), ["Tiene 3 m. de largo."])
+        self.assertEqual(sentence_tokenize("El pico tiene 2964 m. s.n.m. y es el más alto."),
+                         ["El pico tiene 2964 m. s.n.m. y es el más alto."])
+        # a Georgian sentence starts with a letter that title case leaves unchanged
+        self.assertEqual(sentence_tokenize("იწონის 5 kg. შემდეგ წავიდა."),
+                         ["იწონის 5 kg.", "შემდეგ წავიდა."])
+
+    def test_unit_symbol_before_dotted_abbreviation_keeps_sentence_whole(self):
+        self.assertEqual(sentence_tokenize('Escuchó "Trick 17 m. S." en la radio.'),
+                         ['Escuchó "Trick 17 m. S." en la radio.'])
+        # a longer unit before an initial ends the sentence
+        self.assertEqual(sentence_tokenize("El cráneo mide 65 cm. E. uralensis era menor."),
+                         ["El cráneo mide 65 cm.", "E. uralensis era menor."])
+
+    def test_unit_symbol_without_number_stays_abbreviation(self):
+        # "m." is "muerto" here, not the metre
+        self.assertEqual(sentence_tokenize("Juan Pérez (m. 2010) fue pintor."),
+                         ["Juan Pérez (m. 2010) fue pintor."])
+        # the symbol starts the text: no number stands before it
+        self.assertEqual(sentence_tokenize("m. Silva nasceu em 1950"),
+                         ["m. Silva nasceu em 1950"])
+
+    def test_spaced_abbreviation_keeps_sentence_whole(self):
+        self.assertEqual(sentence_tokenize("Llegó a las 11:00 p. m. MDT. Fin."),
+                         ["Llegó a las 11:00 p. m. MDT.", "Fin."])
+        self.assertEqual(sentence_tokenize("Escolha uma opção. a. Comer. b. Dormir."),
+                         ["Escolha uma opção.", "a. Comer.", "b. Dormir."])
+
+    def test_georgian_initial_not_sentence_end(self):
+        # Georgian has no capitals in running text, so its initials stay
+        self.assertEqual(sentence_tokenize("ი. ჭავჭავაძე დაიბადა. დასასრული."),
+                         ["ი. ჭავჭავაძე დაიბადა.", "დასასრული."])
+
+    def test_lowercase_abbreviation_keeps_sentence_whole(self):
+        cases = [
+            "See etc. for more.",
+            "Ver o sol — cf. ilustração 1.",
+            "Ik sprak met dhr. Jansen.",
+            "Siehe vgl. Kapitel 3.",
+            "En el s. XX hubo guerras.",
+            "Adriana Abenia (n. Zaragoza, 1984) es presentadora.",
+            "Chegaram d. Maria e d. João.",
+            "Llegó a las 8 a. m. del lunes.",
+            "Das ist gut, d. h. die Lösung passt.",
+            "Exactamente a las 8:46 a. m., la ciudad se volvió silenciosa.",
+            "Leve outros documentos (p. ex., visto).",
+            "Cerca del año 1000 a. C., los asirios llegaron.",
+            "Es el n. 5.",
+            "Roe v. Wade was the law.",
+            "Many cities, e.g. Paris, have one.",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), [text])
+
 
 SENTENCES = [
     "O Dr. Silva pagou 2,50 € às 14:30. Custa $5, ou 20%! #FF0000 — fim",
