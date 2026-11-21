@@ -270,11 +270,17 @@ class TestSentenceTokenize(unittest.TestCase):
         self.assertEqual(sentence_tokenize("O carro emite 120 g/km. Mais nada."),
                          ["O carro emite 120 g/km.", "Mais nada."])
 
-    def test_unit_symbol_before_dotted_abbreviation_keeps_sentence_whole(self):
+    def test_unit_symbol_before_lowercase_word_stays_in_sentence(self):
+        self.assertEqual(sentence_tokenize("Tiene 3 m. de largo."), ["Tiene 3 m. de largo."])
         self.assertEqual(sentence_tokenize("El pico tiene 2964 m. s.n.m. y es el más alto."),
                          ["El pico tiene 2964 m. s.n.m. y es el más alto."])
-        self.assertEqual(sentence_tokenize("Está a 3850 m. s. n. m., en la meseta."),
-                         ["Está a 3850 m. s. n. m., en la meseta."])
+        # a Georgian sentence starts with a letter that title case leaves unchanged
+        self.assertEqual(sentence_tokenize("იწონის 5 kg. შემდეგ წავიდა."),
+                         ["იწონის 5 kg.", "შემდეგ წავიდა."])
+
+    def test_unit_symbol_before_dotted_abbreviation_keeps_sentence_whole(self):
+        self.assertEqual(sentence_tokenize('Escuchó "Trick 17 m. S." en la radio.'),
+                         ['Escuchó "Trick 17 m. S." en la radio.'])
         # a longer unit before an initial ends the sentence
         self.assertEqual(sentence_tokenize("El cráneo mide 65 cm. E. uralensis era menor."),
                          ["El cráneo mide 65 cm.", "E. uralensis era menor."])

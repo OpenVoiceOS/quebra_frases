@@ -1,7 +1,8 @@
 """Word and sentence tokenization.
 
-A unit symbol after a number ends a sentence ("Tem 3 kg. Pesa muito."). The
-number comes first because the SI Brochure, 9th edition (BIPM 2019), 5.4.3
+A unit symbol after a number ends a sentence ("Tem 3 kg. Pesa muito."), unless
+the next word starts with a lowercase letter ("3 m. de largo"). The number
+comes first because the SI Brochure, 9th edition (BIPM 2019), 5.4.3
 says: "The numerical value always precedes the unit and a space is always
 used to separate the unit from the number." A symbol with a vowel ("min",
 "mol", "Pa") ends a sentence anyway, so _UNITS holds only the symbols that
@@ -130,20 +131,25 @@ def sentence_tokenize(input_string):
             while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
+            nxt = input_string[m.end():m.end() + 1]
+            # Georgian letters count as lowercase, but a Georgian sentence
+            # starts with them too. Title case leaves them unchanged, so only
+            # a letter that title case changes shows the sentence goes on.
+            goes_on = nxt.islower() and nxt != nxt.title()
             if _is_abbreviation(word):
                 # a unit symbol after a number ends the sentence ("3 kg.",
-                # "160 km/h.", "120 g/km.")
+                # "160 km/h.", "120 g/km.") unless the next word goes on
+                # in lower case ("3 m. de largo")
                 k = j
                 while k >= 0 and (input_string[k].isalpha() or input_string[k] == "/"):
                     k -= 1
                 while k >= 0 and input_string[k].isspace():
                     k -= 1
                 unit = word in _UNITS and k >= 0 and input_string[k].isdecimal()
-                # but a one-letter unit that starts a dotted abbreviation does
-                # not ("2964 m. s.n.m.", "2100 m. s. n. m.")
-                dotted = len(word) == 1 and input_string[m.end():m.end() + 1].isalpha() \
+                # or a one-letter unit starts a dotted abbreviation ("17 m. S.")
+                dotted = len(word) == 1 and nxt.isalpha() \
                     and input_string[m.end() + 1:m.end() + 2] == "."
-                if not unit or dotted:
+                if not unit or dotted or goes_on:
                     continue
             # an ordinal ("3. de maio", "XIV. acabou") does not end the
             # sentence when the next word goes on in lower case. The number
@@ -155,11 +161,7 @@ def sentence_tokenize(input_string):
             bare_number = k < split_at - 1 and \
                 (k == 0 or input_string[k - 1].isspace())
             ordinal = bare_number or _ROMAN_NUMERAL.fullmatch(word)
-            # Georgian letters count as lowercase, but a Georgian sentence
-            # starts with them too. Title case leaves them unchanged, so only
-            # a letter that title case changes shows the sentence goes on.
-            nxt = input_string[m.end():m.end() + 1]
-            if ordinal and nxt.islower() and nxt != nxt.title():
+            if ordinal and goes_on:
                 continue
         sentences.append(input_string[last:split_at])
         last = m.end()
