@@ -48,9 +48,22 @@ _WORD_REGEX = re.compile(
     r"|\b[\p{L}\p{M}]*(?:\.[\p{L}\p{M}]+)+\."
     r"|[\p{L}\p{M}\p{N}\u200c\u200d'-]+"
     r"|\S", re.I)
-# the whole whitespace run, not one character of it: matching a single
-# space leaves the rest of the run at the head of the next sentence
-_SENTENCE_SPLIT_CANDIDATE = re.compile(r'(?<=[.?])\s+')
+# A sentence ends at a mark with the Unicode Sentence_Terminal property
+# (UAX #29: ".", "?", "!", the Devanagari danda, the Arabic question mark,
+# "。" and others) and the whitespace after it. The split takes the whole
+# whitespace run: one space leaves the rest at the head of the next sentence.
+# Chinese and Japanese put no space after a sentence, so their marks also end
+# it before any non-space character. Closing brackets and quotes stay with
+# the sentence they close (UAX #29 rule SB11). The fullwidth full stop is not
+# in that list, because it also separates the digits of a number ("３．５").
+# Two marks with the property do not end a sentence. The Unicode chart glosses
+# U+104A, Myanmar little section, as a pause; U+104B is the full stop. U+2024,
+# one dot leader, stands in for the Armenian mijaket, a colon, in running text.
+_SENTENCE_CLOSE = r"[\p{Pe}\p{Pf}\"']"
+_SENTENCE_SPLIT_CANDIDATE = re.compile(
+    r"(?<=\p{Sentence_Terminal})(?<![\u104a\u2024])\s+"
+    r"|(?<=[。｡！？︒︕︖﹖﹗]" + _SENTENCE_CLOSE + r"*)"
+    r"(?!" + _SENTENCE_CLOSE + r"|\p{Sentence_Terminal})(?=\S)")
 # Unicode has no vowel property, and abjads such as Arabic and Hebrew do not
 # write most vowels at all, so the consonant-only test holds only for Latin
 _LATIN_WORD = re.compile(r"[\p{Latin}']+")
@@ -128,16 +141,19 @@ def sentence_tokenize(input_string):
     last = 0
     for m in _SENTENCE_SPLIT_CANDIDATE.finditer(input_string):
         split_at = m.start()
+        nxt = input_string[m.end():m.end() + 1]
+        # Georgian letters count as lowercase, but a Georgian sentence
+        # starts with them too. Title case leaves them unchanged, so only
+        # a letter that title case changes shows the sentence goes on.
+        goes_on = nxt.islower() and nxt != nxt.title()
+        # "Yahoo! and Microsoft", "¡Ay! dijo él"
+        if input_string[split_at - 1] == '!' and goes_on:
+            continue
         if input_string[split_at - 1] == '.':
             j = split_at - 2
             while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
-            nxt = input_string[m.end():m.end() + 1]
-            # Georgian letters count as lowercase, but a Georgian sentence
-            # starts with them too. Title case leaves them unchanged, so only
-            # a letter that title case changes shows the sentence goes on.
-            goes_on = nxt.islower() and nxt != nxt.title()
             if _is_abbreviation(word):
                 # a unit symbol after a number ends the sentence ("3 kg.",
                 # "160 km/h.", "120 g/km.") unless the next word goes on
