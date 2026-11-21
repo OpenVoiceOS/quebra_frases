@@ -8,15 +8,17 @@ used to separate the unit from the number." A symbol with a vowel ("min",
 would otherwise read as an abbreviation. The source of each symbol:
 
 - SI Brochure Table 2, base units: m, s, kg, cd.
-- SI Brochure Table 4, Hz and W, with the prefixes of Table 7: Hz, kHz, MHz,
-  GHz, kW, and pH (picohenry, from H).
+- SI Brochure Table 4, Hz, W and H, with the prefixes of Table 7: Hz, kHz,
+  MHz, GHz, kW, and pH (picohenry). Acidity puts the number after the
+  symbol ("pH 7"), so a pH value does not end a sentence.
 - SI Brochure Table 7, prefixes on the metre and on the gram (section 3
   attaches them to "g"): km, cm, mm, nm, dm, g, mg.
-- SI Brochure Table 8, units accepted for use with the SI: h, l, t, dB, and
-  the litre with the prefixes of Table 7: ml, cl, dl, hl. Wh and kWh are W
-  (Table 4) times h, written as one word.
+- SI Brochure Table 8, "Non-SI units": h, l, t, dB, and the litre with the
+  prefixes of Table 7: ml, cl, dl, hl. Wh and kWh are W (Table 4) times h,
+  written as one word.
 - NIST Special Publication 811 (2008), Appendix B.8: ft, lb, rpm. Section
-  6.1.8 names cc as the abbreviation in use for cm3.
+  6.1.8 lists cc, for cm3, among the abbreviations it does not permit; text
+  uses it all the same.
 - Wiktionary, English entries: mph, kph, lbs (plural of lb), kb, Mb, Gb (for
   kbit, Mbit, Gbit) and kB (kilobyte).
 """
@@ -68,9 +70,7 @@ _VOWELS = set(
     "ꞾꞿꟀꟁꟷꟾꬰꬱꬲꬳꬴꬽꬾꬿꭀꭁꭂꭃꭄꭎꭏꭐꭑꭒꭚꭡꭢꭣꭤﬁﬃＡ"
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
-# "v" (versus, "Roe v. Wade") is the one single letter listed: it holds the
-# sentence before a capital, where any other lowercase letter ends it
-_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num", "v"}
+_ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
 _UNITS = {"m", "s", "kg", "cd", "Hz", "kHz", "MHz", "GHz", "kW", "pH",
           "km", "cm", "mm", "nm", "dm", "g", "mg", "h", "l", "t", "dB",
           "ml", "cl", "dl", "hl", "Wh", "kWh", "ft", "lb", "rpm", "cc",
@@ -130,33 +130,20 @@ def sentence_tokenize(input_string):
             while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
-            nxt = input_string[m.end():m.end() + 1]
             if _is_abbreviation(word):
-                # a single letter holds the sentence in a dotted abbreviation:
-                # after a period ("i.e.", "e.g."), after a letter, a period
-                # and a space ("p. m.", "d. h.", a list item "opção. a. Comer")
-                # and before a letter and a period ("a. C."), but not before
-                # an ellipsis ("x. K...")
-                dotted = len(word) == 1 and (
-                    (j >= 0 and input_string[j] == ".")
-                    or (j >= 2 and input_string[j].isspace()
-                        and input_string[j - 1] == "." and input_string[j - 2].isalpha())
-                    or (nxt.isalpha() and input_string[m.end() + 1:m.end() + 2] == "."
-                        and input_string[m.end() + 2:m.end() + 3] != "."))
                 # a unit symbol after a number ends the sentence ("3 kg.",
-                # "160 km/h.")
+                # "160 km/h.", "120 g/km.")
                 k = j
                 while k >= 0 and (input_string[k].isalpha() or input_string[k] == "/"):
                     k -= 1
                 while k >= 0 and input_string[k].isspace():
                     k -= 1
                 unit = word in _UNITS and k >= 0 and input_string[k].isdecimal()
-                # so does a lowercase letter before a capital ("um x. Dois");
-                # title case leaves a Georgian letter unchanged, and a
-                # Georgian sentence starts with one
-                lone = len(word) == 1 and word != word.title() \
-                    and word not in _ABBREVIATIONS and nxt.isupper()
-                if dotted or not (unit or lone):
+                # but a one-letter unit that starts a dotted abbreviation does
+                # not ("2964 m. s.n.m.", "2100 m. s. n. m.")
+                dotted = len(word) == 1 and input_string[m.end():m.end() + 1].isalpha() \
+                    and input_string[m.end() + 1:m.end() + 2] == "."
+                if not unit or dotted:
                     continue
             # an ordinal ("3. de maio", "XIV. acabou") does not end the
             # sentence when the next word goes on in lower case. The number
@@ -171,6 +158,7 @@ def sentence_tokenize(input_string):
             # Georgian letters count as lowercase, but a Georgian sentence
             # starts with them too. Title case leaves them unchanged, so only
             # a letter that title case changes shows the sentence goes on.
+            nxt = input_string[m.end():m.end() + 1]
             if ordinal and nxt.islower() and nxt != nxt.title():
                 continue
         sentences.append(input_string[last:split_at])

@@ -270,19 +270,22 @@ class TestSentenceTokenize(unittest.TestCase):
         self.assertEqual(sentence_tokenize("O carro emite 120 g/km. Mais nada."),
                          ["O carro emite 120 g/km.", "Mais nada."])
 
+    def test_unit_symbol_before_dotted_abbreviation_keeps_sentence_whole(self):
+        self.assertEqual(sentence_tokenize("El pico tiene 2964 m. s.n.m. y es el más alto."),
+                         ["El pico tiene 2964 m. s.n.m. y es el más alto."])
+        self.assertEqual(sentence_tokenize("Está a 3850 m. s. n. m., en la meseta."),
+                         ["Está a 3850 m. s. n. m., en la meseta."])
+        # a longer unit before an initial ends the sentence
+        self.assertEqual(sentence_tokenize("El cráneo mide 65 cm. E. uralensis era menor."),
+                         ["El cráneo mide 65 cm.", "E. uralensis era menor."])
+
     def test_unit_symbol_without_number_stays_abbreviation(self):
         # "m." is "muerto" here, not the metre
         self.assertEqual(sentence_tokenize("Juan Pérez (m. 2010) fue pintor."),
                          ["Juan Pérez (m. 2010) fue pintor."])
-
-    def test_lowercase_single_letter_before_capital_ends_sentence(self):
-        self.assertEqual(sentence_tokenize("Um x. Dois; três."),
-                         ["Um x.", "Dois; três."])
-        # the letter starts the text: no character stands before it
-        self.assertEqual(sentence_tokenize("x. Dois."), ["x.", "Dois."])
-        # an ellipsis after the next letter is no dotted abbreviation
-        self.assertEqual(sentence_tokenize("Escreve x. K... e para."),
-                         ["Escreve x.", "K...", "e para."])
+        # the symbol starts the text: no number stands before it
+        self.assertEqual(sentence_tokenize("m. Silva nasceu em 1950"),
+                         ["m. Silva nasceu em 1950"])
 
     def test_spaced_abbreviation_keeps_sentence_whole(self):
         self.assertEqual(sentence_tokenize("Llegó a las 11:00 p. m. MDT. Fin."),
@@ -301,6 +304,9 @@ class TestSentenceTokenize(unittest.TestCase):
             "Ver o sol — cf. ilustração 1.",
             "Ik sprak met dhr. Jansen.",
             "Siehe vgl. Kapitel 3.",
+            "En el s. XX hubo guerras.",
+            "Adriana Abenia (n. Zaragoza, 1984) es presentadora.",
+            "Chegaram d. Maria e d. João.",
             "Llegó a las 8 a. m. del lunes.",
             "Das ist gut, d. h. die Lösung passt.",
             "Exactamente a las 8:46 a. m., la ciudad se volvió silenciosa.",
