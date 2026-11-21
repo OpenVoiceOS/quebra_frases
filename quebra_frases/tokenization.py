@@ -1,3 +1,30 @@
+"""Word and sentence tokenization.
+
+A unit symbol after a number ends a sentence ("Tem 3 kg. Pesa muito."), unless
+the next word starts with a lowercase letter ("3 cm. de largo"). The number
+comes first because the SI Brochure, 9th edition (BIPM 2019), 5.4.3
+says: "The numerical value always precedes the unit and a space is always
+used to separate the unit from the number." A symbol with a vowel ("min",
+"mol", "Pa") ends a sentence anyway, so _UNITS holds only the symbols that
+would otherwise read as an abbreviation. The source of each symbol:
+
+- SI Brochure Table 2, base units: s, kg, cd. The metre, m, is not in the
+  list: Lithuanian writes "m." (metai, "year") after each year ("2006 m.
+  Inspekcija"), and the text does not tell a year from a length ("3850 m.").
+- SI Brochure Table 4, Hz, W and H, with the prefixes of Table 7: Hz, kHz,
+  MHz, GHz, kW, and pH (picohenry). Acidity puts the number after the
+  symbol ("pH 7"), so a pH value does not end a sentence.
+- SI Brochure Table 7, prefixes on the metre and on the gram (section 3
+  attaches them to "g"): km, cm, mm, nm, dm, g, mg.
+- SI Brochure Table 8, "Non-SI units": h, l, t, dB, and the litre with the
+  prefixes of Table 7: ml, cl, dl, hl. Wh and kWh are W (Table 4) times h,
+  written as one word.
+- NIST Special Publication 811 (2008), Appendix B.8: ft, lb, rpm. Section
+  6.1.8 lists cc, for cm3, among the abbreviations it does not permit; text
+  uses it all the same.
+- Wiktionary, English entries: mph, kph, lbs (plural of lb), kb, Mb, Gb (for
+  kbit, Mbit, Gbit) and kB (kilobyte).
+"""
 import unicodedata
 from itertools import groupby
 
@@ -47,6 +74,10 @@ _VOWELS = set(
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
+_UNITS = {"s", "kg", "cd", "Hz", "kHz", "MHz", "GHz", "kW", "pH",
+          "km", "cm", "mm", "nm", "dm", "g", "mg", "h", "l", "t", "dB",
+          "ml", "cl", "dl", "hl", "Wh", "kWh", "ft", "lb", "rpm", "cc",
+          "mph", "kph", "lbs", "kb", "Mb", "Gb", "kB"}
 # capital words that are titles or doubled-letter plurals ("SR.", "EXMO.",
 # Spanish "RR.HH.", "DD.HH.", "VV.AA.", Portuguese "DD." Digníssimo); "PP"
 # and "SS" are left out because they are also party names ("PP.", "der SS.")
@@ -102,8 +133,26 @@ def sentence_tokenize(input_string):
             while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
                 j -= 1
             word = input_string[j + 1:split_at - 1]
+            nxt = input_string[m.end():m.end() + 1]
+            # Georgian letters count as lowercase, but a Georgian sentence
+            # starts with them too. Title case leaves them unchanged, so only
+            # a letter that title case changes shows the sentence goes on.
+            goes_on = nxt.islower() and nxt != nxt.title()
             if _is_abbreviation(word):
-                continue
+                # a unit symbol after a number ends the sentence ("3 kg.",
+                # "160 km/h.", "120 g/km.") unless the next word goes on
+                # in lower case ("3 cm. de largo")
+                k = j
+                while k >= 0 and (input_string[k].isalpha() or input_string[k] == "/"):
+                    k -= 1
+                while k >= 0 and input_string[k].isspace():
+                    k -= 1
+                unit = word in _UNITS and k >= 0 and input_string[k].isdecimal()
+                # or a one-letter unit starts a dotted abbreviation ("3 s. S. 45")
+                dotted = len(word) == 1 and nxt.isalpha() \
+                    and input_string[m.end() + 1:m.end() + 2] == "."
+                if not unit or dotted or goes_on:
+                    continue
             # an ordinal ("3. de maio", "XIV. acabou") does not end the
             # sentence when the next word goes on in lower case. The number
             # must stand alone: "14:30.", "2,50." and "COVID-19." end in a
@@ -114,11 +163,7 @@ def sentence_tokenize(input_string):
             bare_number = k < split_at - 1 and \
                 (k == 0 or input_string[k - 1].isspace())
             ordinal = bare_number or _ROMAN_NUMERAL.fullmatch(word)
-            # Georgian letters count as lowercase, but a Georgian sentence
-            # starts with them too. Title case leaves them unchanged, so only
-            # a letter that title case changes shows the sentence goes on.
-            nxt = input_string[m.end():m.end() + 1]
-            if ordinal and nxt.islower() and nxt != nxt.title():
+            if ordinal and goes_on:
                 continue
         sentences.append(input_string[last:split_at])
         last = m.end()
