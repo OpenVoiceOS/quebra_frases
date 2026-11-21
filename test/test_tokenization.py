@@ -263,35 +263,84 @@ class TestSentenceTokenize(unittest.TestCase):
                          ["ფასი არის 3.", "შემდეგ ის წავიდა."])
 
     def test_unit_symbol_after_number_ends_sentence(self):
-        self.assertEqual(sentence_tokenize("Tem 3 kg. Pesa muito."),
-                         ["Tem 3 kg.", "Pesa muito."])
-        self.assertEqual(sentence_tokenize("Ia a 160 km/h. Mais ninguém viu."),
-                         ["Ia a 160 km/h.", "Mais ninguém viu."])
-        self.assertEqual(sentence_tokenize("O carro emite 120 g/km. Mais nada."),
-                         ["O carro emite 120 g/km.", "Mais nada."])
+        # one sentence per symbol in _UNITS, so that each entry has a test
+        cases = [
+            ("Corrió los 100 metros en 9,58 s.", "Nadie lo superó."),
+            ("Tem 3 kg.", "Pesa muito."),
+            ("A lâmpada dá 800 cd.", "Ilumina a sala."),
+            ("La red funciona a 50 Hz.", "En América usa otra."),
+            ("A rádio emite em 1440 kHz.", "Ouve-se bem."),
+            ("Emite em 99,1 MHz.", "Tem muitos ouvintes."),
+            ("O processador corre a 3,2 GHz.", "Aquece pouco."),
+            ("O motor dá 110 kW.", "É rápido."),
+            ("A bobina tem 47 pH.", "Serve para filtros."),
+            ("A cidade fica a 40 km.", "Fomos de carro."),
+            ("Mede 30 cm.", "Cabe na mala."),
+            ("A chuva somou 12 mm.", "Choveu toda a noite."),
+            ("A luz tem 532 nm.", "É verde."),
+            ("A caixa tem 5 dm.", "Não cabe."),
+            ("O pacote tem 250 g.", "Chega para dois."),
+            ("Tome 500 mg.", "Repita à noite."),
+            ("A viagem dura 3 h.", "Leve água."),
+            ("O depósito leva 50 l.", "Enche-se depressa."),
+            ("O camião carrega 12 t.", "Pesa demais."),
+            ("O ruído chega a 90 dB.", "Faz mal aos ouvidos."),
+            ("Junte 200 ml.", "Mexa bem."),
+            ("A garrafa tem 75 cl.", "Serve quatro."),
+            ("Junte 2 dl.", "Leve ao lume."),
+            ("A adega produz 300 hl.", "Vende tudo."),
+            ("A bateria guarda 50 Wh.", "Dura um dia."),
+            ("A casa gasta 300 kWh.", "Paga muito."),
+            ("The wall is 10 ft.", "It is high."),
+            ("It weighs 5 lb.", "Carry it."),
+            ("The disk spins at 7200 rpm.", "It is fast."),
+            ("The engine has 125 cc.", "It is light."),
+            ("He drove at 70 mph.", "Nobody stopped him."),
+            ("Ia a 90 kph.", "Ninguém o parou."),
+            ("It weighs 20 lbs.", "Lift it with care."),
+            ("A linha dá 56 kb.", "É lenta."),
+            ("The line gives 100 Mb.", "It is fast."),
+            ("A fibra dá 1 Gb.", "Chega bem."),
+            ("O ficheiro tem 12 kB.", "Abre logo."),
+            # a symbol with a vowel is not an abbreviation and needs no entry
+            ("A viagem dura 20 min.", "Leve água."),
+            # the number comes before a unit written with a slash
+            ("Ia a 160 km/h.", "Mais ninguém viu."),
+            ("O carro emite 120 g/km.", "Mais nada."),
+        ]
+        for first, second in cases:
+            with self.subTest(first):
+                self.assertEqual(sentence_tokenize(f"{first} {second}"), [first, second])
+
+    def test_metre_symbol_is_not_a_unit(self):
+        # Lithuanian writes "m." (metai, "year") after a year, and a year
+        # looks the same as a length
+        self.assertEqual(sentence_tokenize("2006 m. Inspekcija pradėjo darbą."),
+                         ["2006 m. Inspekcija pradėjo darbą."])
+        self.assertEqual(sentence_tokenize("Está a 3850 m. s. n. m., en la meseta."),
+                         ["Está a 3850 m. s. n. m., en la meseta."])
 
     def test_unit_symbol_before_lowercase_word_stays_in_sentence(self):
-        self.assertEqual(sentence_tokenize("Tiene 3 m. de largo."), ["Tiene 3 m. de largo."])
-        self.assertEqual(sentence_tokenize("El pico tiene 2964 m. s.n.m. y es el más alto."),
-                         ["El pico tiene 2964 m. s.n.m. y es el más alto."])
+        self.assertEqual(sentence_tokenize("Mide 3 cm. de largo."), ["Mide 3 cm. de largo."])
         # a Georgian sentence starts with a letter that title case leaves unchanged
         self.assertEqual(sentence_tokenize("იწონის 5 kg. შემდეგ წავიდა."),
                          ["იწონის 5 kg.", "შემდეგ წავიდა."])
 
     def test_unit_symbol_before_dotted_abbreviation_keeps_sentence_whole(self):
-        self.assertEqual(sentence_tokenize('Escuchó "Trick 17 m. S." en la radio.'),
-                         ['Escuchó "Trick 17 m. S." en la radio.'])
+        # German "s. S." is "siehe Seite"
+        self.assertEqual(sentence_tokenize("Die Werte stehen in Tabelle 3 s. S. 45 im Anhang."),
+                         ["Die Werte stehen in Tabelle 3 s. S. 45 im Anhang."])
         # a longer unit before an initial ends the sentence
         self.assertEqual(sentence_tokenize("El cráneo mide 65 cm. E. uralensis era menor."),
                          ["El cráneo mide 65 cm.", "E. uralensis era menor."])
 
     def test_unit_symbol_without_number_stays_abbreviation(self):
-        # "m." is "muerto" here, not the metre
-        self.assertEqual(sentence_tokenize("Juan Pérez (m. 2010) fue pintor."),
-                         ["Juan Pérez (m. 2010) fue pintor."])
+        # "h." is "hacia" here, not the hour
+        self.assertEqual(sentence_tokenize("Juan Pérez (h. 1500) fue pintor."),
+                         ["Juan Pérez (h. 1500) fue pintor."])
         # the symbol starts the text: no number stands before it
-        self.assertEqual(sentence_tokenize("m. Silva nasceu em 1950"),
-                         ["m. Silva nasceu em 1950"])
+        self.assertEqual(sentence_tokenize("s. Silva nasceu em 1950"),
+                         ["s. Silva nasceu em 1950"])
 
     def test_spaced_abbreviation_keeps_sentence_whole(self):
         self.assertEqual(sentence_tokenize("Llegó a las 11:00 p. m. MDT. Fin."),

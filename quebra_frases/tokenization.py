@@ -1,14 +1,16 @@
 """Word and sentence tokenization.
 
 A unit symbol after a number ends a sentence ("Tem 3 kg. Pesa muito."), unless
-the next word starts with a lowercase letter ("3 m. de largo"). The number
+the next word starts with a lowercase letter ("3 cm. de largo"). The number
 comes first because the SI Brochure, 9th edition (BIPM 2019), 5.4.3
 says: "The numerical value always precedes the unit and a space is always
 used to separate the unit from the number." A symbol with a vowel ("min",
 "mol", "Pa") ends a sentence anyway, so _UNITS holds only the symbols that
 would otherwise read as an abbreviation. The source of each symbol:
 
-- SI Brochure Table 2, base units: m, s, kg, cd.
+- SI Brochure Table 2, base units: s, kg, cd. The metre, m, is not in the
+  list: Lithuanian writes "m." (metai, "year") after each year ("2006 m.
+  Inspekcija"), and the text does not tell a year from a length ("3850 m.").
 - SI Brochure Table 4, Hz, W and H, with the prefixes of Table 7: Hz, kHz,
   MHz, GHz, kW, and pH (picohenry). Acidity puts the number after the
   symbol ("pH 7"), so a pH value does not end a sentence.
@@ -72,7 +74,7 @@ _VOWELS = set(
     "ＥＩＯＵＹａｅｉｏｕｙ𝼚𝼛"
 )
 _ABBREVIATIONS = {"sra", "dra", "exmo", "exma", "etc", "ex", "pp", "vs", "av", "num"}
-_UNITS = {"m", "s", "kg", "cd", "Hz", "kHz", "MHz", "GHz", "kW", "pH",
+_UNITS = {"s", "kg", "cd", "Hz", "kHz", "MHz", "GHz", "kW", "pH",
           "km", "cm", "mm", "nm", "dm", "g", "mg", "h", "l", "t", "dB",
           "ml", "cl", "dl", "hl", "Wh", "kWh", "ft", "lb", "rpm", "cc",
           "mph", "kph", "lbs", "kb", "Mb", "Gb", "kB"}
@@ -139,14 +141,14 @@ def sentence_tokenize(input_string):
             if _is_abbreviation(word):
                 # a unit symbol after a number ends the sentence ("3 kg.",
                 # "160 km/h.", "120 g/km.") unless the next word goes on
-                # in lower case ("3 m. de largo")
+                # in lower case ("3 cm. de largo")
                 k = j
                 while k >= 0 and (input_string[k].isalpha() or input_string[k] == "/"):
                     k -= 1
                 while k >= 0 and input_string[k].isspace():
                     k -= 1
                 unit = word in _UNITS and k >= 0 and input_string[k].isdecimal()
-                # or a one-letter unit starts a dotted abbreviation ("17 m. S.")
+                # or a one-letter unit starts a dotted abbreviation ("3 s. S. 45")
                 dotted = len(word) == 1 and nxt.isalpha() \
                     and input_string[m.end() + 1:m.end() + 2] == "."
                 if not unit or dotted or goes_on:
