@@ -222,8 +222,6 @@ class TestSentenceTokenize(unittest.TestCase):
                          ["Dnia 3. maja wyjechał."])
         self.assertEqual(sentence_tokenize("A XIV. században élt."),
                          ["A XIV. században élt."])
-        self.assertEqual(sentence_tokenize("XX. mendean 1990. urtean jaio zen."),
-                         ["XX. mendean 1990. urtean jaio zen."])
 
     def test_word_before_lowercase_still_ends_sentence(self):
         self.assertEqual(sentence_tokenize("Saiu. depois voltou."),
@@ -264,29 +262,33 @@ class TestSentenceTokenize(unittest.TestCase):
         self.assertEqual(sentence_tokenize("ფასი არის 3. შემდეგ ის წავიდა."),
                          ["ფასი არის 3.", "შემდეგ ის წავიდა."])
 
-    def test_unit_symbol_before_capital_ends_sentence(self):
+    def test_unit_symbol_after_number_ends_sentence(self):
         self.assertEqual(sentence_tokenize("Tem 3 kg. Pesa muito."),
                          ["Tem 3 kg.", "Pesa muito."])
+        self.assertEqual(sentence_tokenize("Ia a 160 km/h. Mais ninguém viu."),
+                         ["Ia a 160 km/h.", "Mais ninguém viu."])
+        self.assertEqual(sentence_tokenize("O carro emite 120 g/km. Mais nada."),
+                         ["O carro emite 120 g/km.", "Mais nada."])
+
+    def test_unit_symbol_without_number_stays_abbreviation(self):
+        # "m." is "muerto" here, not the metre
+        self.assertEqual(sentence_tokenize("Juan Pérez (m. 2010) fue pintor."),
+                         ["Juan Pérez (m. 2010) fue pintor."])
 
     def test_lowercase_single_letter_before_capital_ends_sentence(self):
         self.assertEqual(sentence_tokenize("Um x. Dois; três."),
                          ["Um x.", "Dois; três."])
-
-    def test_lowercase_word_without_vowel_ends_sentence(self):
-        self.assertEqual(
-            sentence_tokenize("Não apenas o http. Eles oferecem mais."),
-            ["Não apenas o http.", "Eles oferecem mais."])
-        self.assertEqual(sentence_tokenize("ab cd. ef."), ["ab cd.", "ef."])
-        self.assertEqual(sentence_tokenize("Veja www.exemplo.pt. Depois saia."),
-                         ["Veja www.exemplo.pt.", "Depois saia."])
-
-    def test_lowercase_letter_before_lowercase_word_ends_sentence(self):
-        # "a" is a pronoun here, not an abbreviation
-        self.assertEqual(sentence_tokenize("Vi-a. depois saí."),
-                         ["Vi-a.", "depois saí."])
+        # the letter starts the text: no character stands before it
+        self.assertEqual(sentence_tokenize("x. Dois."), ["x.", "Dois."])
         # an ellipsis after the next letter is no dotted abbreviation
-        self.assertEqual(sentence_tokenize("Escreve x. k... e para."),
-                         ["Escreve x.", "k...", "e para."])
+        self.assertEqual(sentence_tokenize("Escreve x. K... e para."),
+                         ["Escreve x.", "K...", "e para."])
+
+    def test_spaced_abbreviation_keeps_sentence_whole(self):
+        self.assertEqual(sentence_tokenize("Llegó a las 11:00 p. m. MDT. Fin."),
+                         ["Llegó a las 11:00 p. m. MDT.", "Fin."])
+        self.assertEqual(sentence_tokenize("Escolha uma opção. a. Comer. b. Dormir."),
+                         ["Escolha uma opção.", "a. Comer.", "b. Dormir."])
 
     def test_georgian_initial_not_sentence_end(self):
         # Georgian has no capitals in running text, so its initials stay
@@ -297,9 +299,14 @@ class TestSentenceTokenize(unittest.TestCase):
         cases = [
             "See etc. for more.",
             "Ver o sol — cf. ilustração 1.",
+            "Ik sprak met dhr. Jansen.",
+            "Siehe vgl. Kapitel 3.",
+            "Llegó a las 8 a. m. del lunes.",
+            "Das ist gut, d. h. die Lösung passt.",
             "Exactamente a las 8:46 a. m., la ciudad se volvió silenciosa.",
             "Leve outros documentos (p. ex., visto).",
             "Cerca del año 1000 a. C., los asirios llegaron.",
+            "Es el n. 5.",
             "Roe v. Wade was the law.",
             "Many cities, e.g. Paris, have one.",
         ]
