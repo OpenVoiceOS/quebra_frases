@@ -68,6 +68,7 @@ _SENTENCE_SPLIT_CANDIDATE = re.compile(
     r"(?!" + _SENTENCE_CLOSE + r"|\p{Sentence_Terminal})(?=\S)")
 # closing brackets and quotes, then the whitespace after them (group 1)
 _SPACED_CLOSE = re.compile(r"[\p{Pe}\p{Pf}]+(\s+|$)")
+_LINE_BREAK = re.compile(r"[\n\r\v\f\x85\u2028\u2029]")
 # Unicode has no vowel property, and abjads such as Arabic and Hebrew do not
 # write most vowels at all, so the consonant-only test holds only for Latin
 _LATIN_WORD = re.compile(r"[\p{Latin}']+")
@@ -149,8 +150,10 @@ def sentence_tokenize(input_string):
         # French sets a space before a closing guillemet ("« Òc ! »"). The
         # closing marks stay with the sentence they close, so the split moves
         # past them, and a text that ends with them does not split at all.
+        # A "»" at the start of a line opens the next paragraph of a quote
+        # that runs over paragraphs, so it stays where it is.
         closing = _SPACED_CLOSE.match(input_string, resume)
-        if closing:
+        if closing and not _LINE_BREAK.search(m.group()):
             if closing.end() == len(input_string):
                 continue
             resume = closing.end()

@@ -442,10 +442,20 @@ class TestSentenceTokenize(unittest.TestCase):
             ("Il a dit « Non. »  Puis il est parti.", ["Il a dit « Non. »", "Puis il est parti."]),
             ("Ço qu'a dit: « Òc ! »", ["Ço qu'a dit: « Òc ! »"]),
             ("Il a dit « Non ! » puis il est parti.", ["Il a dit « Non ! » puis il est parti."]),
+            ("Er ging. »Komm!«, rief sie.", ["Er ging.", "»Komm!«, rief sie."]),
+            ("Ele chegou no dia 3. ) de maio.", ["Ele chegou no dia 3. ) de maio."]),
+            ("(Bsp. 3 s. ) S. 45 sagt.", ["(Bsp. 3 s. ) S. 45 sagt."]),
+            ("Hi. »» Bye.", ["Hi. »»", "Bye."]),
+            ("（注意。 ） 下一句。", ["（注意。 ）", "下一句。"]),
         ]
         for text, expected in cases:
             with self.subTest(text=text):
                 self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_a_closing_guillemet_that_starts_a_line_opens_the_next_paragraph(self):
+        text = "« Premier paragraphe. Fin du premier.\n» Deuxième paragraphe. »"
+        self.assertEqual(sentence_tokenize(text),
+                         ["« Premier paragraphe.", "Fin du premier.", "» Deuxième paragraphe. »"])
 
     def test_spans_cover_a_spaced_closing_guillemet(self):
         text = "Il a dit « Non ! » Puis il est parti."
