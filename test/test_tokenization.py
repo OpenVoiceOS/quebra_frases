@@ -456,6 +456,10 @@ class TestSentenceTokenize(unittest.TestCase):
         text = "« Premier paragraphe. Fin du premier.\n» Deuxième paragraphe. »"
         self.assertEqual(sentence_tokenize(text),
                          ["« Premier paragraphe.", "Fin du premier.", "» Deuxième paragraphe. »"])
+        for line_break in ("\r", "\u2028"):
+            with self.subTest(line_break=line_break):
+                self.assertEqual(sentence_tokenize(f"« Premier.{line_break}» Deuxième paragraphe."),
+                                 ["« Premier.", "» Deuxième paragraphe."])
 
     def test_spans_cover_a_spaced_closing_guillemet(self):
         text = "Il a dit « Non ! » Puis il est parti."
