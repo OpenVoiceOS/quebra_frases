@@ -376,6 +376,75 @@ class TestSentenceTokenize(unittest.TestCase):
                 self.assertEqual(sentence_tokenize(text), [text])
 
 
+    def test_exclamation_mark_ends_sentence(self):
+        self.assertEqual(sentence_tokenize("Que frio! Fecha a janela."),
+                         ["Que frio!", "Fecha a janela."])
+        self.assertEqual(sentence_tokenize("¡Hola! ¿Qué tal? Bien."),
+                         ["¡Hola!", "¿Qué tal?", "Bien."])
+        self.assertEqual(sentence_tokenize("Wow!! Really?! Yes."),
+                         ["Wow!!", "Really?!", "Yes."])
+        # a lowercase word after the mark goes on with the sentence
+        self.assertEqual(sentence_tokenize("Los usuarios de Yahoo! y Microsoft."),
+                         ["Los usuarios de Yahoo! y Microsoft."])
+        self.assertEqual(sentence_tokenize("¡Ay! dijo él. Se fue."),
+                         ["¡Ay! dijo él.", "Se fue."])
+
+    def test_sentence_terminal_of_other_scripts_ends_sentence(self):
+        # Devanagari danda, Arabic question mark, Urdu full stop, Armenian
+        # full stop and Ethiopic full stop, each with a space after it
+        cases = [
+            ("मैं घर गया। वह आया।", ["मैं घर गया।", "वह आया।"]),
+            ("هل أنت بخير؟ نعم.", ["هل أنت بخير؟", "نعم."]),
+            ("میں گھر گیا۔ وہ آیا۔", ["میں گھر گیا۔", "وہ آیا۔"]),
+            ("Ես տուն գնացի։ Նա եկավ։", ["Ես տուն գնացի։", "Նա եկավ։"]),
+            ("ወደ ቤት ሄድኩ። እሱ መጣ።", ["ወደ ቤት ሄድኩ።", "እሱ መጣ።"]),
+        ]
+        for text, expected in cases:
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_pause_marks_with_the_property_do_not_end_sentence(self):
+        # Myanmar little section is a pause; Armenian text uses the one dot
+        # leader for the mijaket, a colon
+        self.assertEqual(sentence_tokenize("လူအသစ်များနှင့် တွေ့ရန်၊ သင့်ကိုယ်သင်လေ့လာရန်။"),
+                         ["လူအသစ်များနှင့် တွေ့ရန်၊ သင့်ကိုယ်သင်လေ့လာရန်။"])
+        self.assertEqual(sentence_tokenize("Ձնահոսքերն անբնական երևույթներ չեն․ կտրուկ թեքությունները"),
+                         ["Ձնահոսքերն անբնական երևույթներ չեն․ կտրուկ թեքությունները"])
+        self.assertEqual(sentence_tokenize("ကျွန်တော် အိမ်ပြန်တယ်။ သူ လာတယ်။"),
+                         ["ကျွန်တော် အိမ်ပြန်တယ်။", "သူ လာတယ်။"])
+
+    def test_chinese_and_japanese_sentence_ends_split_without_space(self):
+        cases = [
+            ("我有三本书。你有几本？太好了！",
+             ["我有三本书。", "你有几本？", "太好了！"]),
+            ("今日は晴れです。明日は雨ですか？", ["今日は晴れです。", "明日は雨ですか？"]),
+            ("ｺﾝﾆﾁﾊ｡ｹﾞﾝｷ?", ["ｺﾝﾆﾁﾊ｡", "ｹﾞﾝｷ?"]),
+            # a run of marks ends the sentence once
+            ("真的吗？！我不信。", ["真的吗？！", "我不信。"]),
+            # a space after the mark goes with neither sentence
+            ("你好。 再见。", ["你好。", "再见。"]),
+        ]
+        for text, expected in cases:
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_closing_quote_stays_with_its_sentence(self):
+        self.assertEqual(sentence_tokenize("他说：“我来了。”她笑了。"),
+                         ["他说：“我来了。”", "她笑了。"])
+        self.assertEqual(sentence_tokenize("「はい。」彼は答えた。"),
+                         ["「はい。」", "彼は答えた。"])
+
+    def test_chinese_text_has_no_empty_sentence(self):
+        self.assertEqual(sentence_tokenize("我有三本书。"), ["我有三本书。"])
+        self.assertEqual(sentence_tokenize("价格是３．５元。"), ["价格是３．５元。"])
+
+    def test_chinese_split_is_lossless(self):
+        for text in ("我有三本书。你有几本？太好了！", "他说：“我来了。”她笑了。",
+                     "今日は晴れです。明日は雨ですか？"):
+            with self.subTest(text=text):
+                self.assertEqual("".join(sentence_tokenize(text)), text)
+
+
 SENTENCES = [
     "O Dr. Silva pagou 2,50 € às 14:30. Custa $5, ou 20%! #FF0000 — fim",
     "Costs £3.99 or ¥500 — maybe 1,234.50 USD; see p. 4–5.",
