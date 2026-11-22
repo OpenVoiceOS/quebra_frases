@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.3.8a4](https://github.com/OpenVoiceOS/quebra_frases/tree/0.3.8a4) (2026-11-21)
+## [0.3.8a5](https://github.com/OpenVoiceOS/quebra_frases/tree/0.3.8a5) (2026-11-22)
 
-[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/0.3.8a3...0.3.8a4)
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/0.3.8a4...0.3.8a5)
 
 **Merged pull requests:**
 
@@ -10,6 +10,10 @@
 - Update actions/setup-python action to v6 [\#10](https://github.com/OpenVoiceOS/quebra_frases/pull/10) ([renovate[bot]](https://github.com/apps/renovate))
 - Update actions/checkout action to v6 [\#9](https://github.com/OpenVoiceOS/quebra_frases/pull/9) ([renovate[bot]](https://github.com/apps/renovate))
 - Update dependency python to 3.14 [\#6](https://github.com/OpenVoiceOS/quebra_frases/pull/6) ([renovate[bot]](https://github.com/apps/renovate))
+
+## [0.3.8a4](https://github.com/OpenVoiceOS/quebra_frases/tree/0.3.8a4) (2026-11-21)
+
+[Full Changelog](https://github.com/OpenVoiceOS/quebra_frases/compare/0.3.8a3...0.3.8a4)
 
 ## [0.3.8a3](https://github.com/OpenVoiceOS/quebra_frases/tree/0.3.8a3) (2026-11-19)
 
