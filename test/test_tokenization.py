@@ -2,6 +2,7 @@ import sys
 import unittest
 
 from quebra_frases import (char_indexed_word_tokenize, sentence_tokenize,
+                           span_indexed_sentence_tokenize,
                            span_indexed_word_tokenize, word_tokenize)
 from quebra_frases.tokenization import _VOWELS
 
@@ -433,6 +434,23 @@ class TestSentenceTokenize(unittest.TestCase):
                          ["他说：“我来了。”", "她笑了。"])
         self.assertEqual(sentence_tokenize("「はい。」彼は答えた。"),
                          ["「はい。」", "彼は答えた。"])
+
+    def test_a_spaced_closing_guillemet_stays_with_its_sentence(self):
+        # French typography sets a space before "»"
+        cases = [
+            ("« Òc ! » E puèi parlèt.", ["« Òc ! »", "E puèi parlèt."]),
+            ("Il a dit « Non. »  Puis il est parti.", ["Il a dit « Non. »", "Puis il est parti."]),
+            ("Ço qu'a dit: « Òc ! »", ["Ço qu'a dit: « Òc ! »"]),
+            ("Il a dit « Non ! » puis il est parti.", ["Il a dit « Non ! » puis il est parti."]),
+        ]
+        for text, expected in cases:
+            with self.subTest(text=text):
+                self.assertEqual(sentence_tokenize(text), expected)
+
+    def test_spans_cover_a_spaced_closing_guillemet(self):
+        text = "Il a dit « Non ! » Puis il est parti."
+        self.assertEqual(span_indexed_sentence_tokenize(text),
+                         [(0, 18, "Il a dit « Non ! »"), (19, 37, "Puis il est parti.")])
 
     def test_chinese_text_has_no_empty_sentence(self):
         self.assertEqual(sentence_tokenize("我有三本书。"), ["我有三本书。"])

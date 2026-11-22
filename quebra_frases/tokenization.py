@@ -66,6 +66,8 @@ _SENTENCE_SPLIT_CANDIDATE = re.compile(
     r"(?<=\p{Sentence_Terminal})(?<![\u104a\u2024])\s+"
     r"|(?<=[。｡！？︒︕︖﹖﹗]" + _SENTENCE_CLOSE + r"*)"
     r"(?!" + _SENTENCE_CLOSE + r"|\p{Sentence_Terminal})(?=\S)")
+# closing brackets and quotes, then the whitespace after them (group 1)
+_SPACED_CLOSE = re.compile(r"[\p{Pe}\p{Pf}]+(\s+|$)")
 # Unicode has no vowel property, and abjads such as Arabic and Hebrew do not
 # write most vowels at all, so the consonant-only test holds only for Latin
 _LATIN_WORD = re.compile(r"[\p{Latin}']+")
@@ -142,20 +144,30 @@ def sentence_tokenize(input_string):
     sentences = []
     last = 0
     for m in _SENTENCE_SPLIT_CANDIDATE.finditer(input_string):
-        split_at = m.start()
-        nxt = input_string[m.end():m.end() + 1]
+        mark = split_at = m.start()
+        resume = m.end()
+        # French sets a space before a closing guillemet ("« Òc ! »"). The
+        # closing marks stay with the sentence they close, so the split moves
+        # past them, and a text that ends with them does not split at all.
+        closing = _SPACED_CLOSE.match(input_string, resume)
+        if closing:
+            if closing.end() == len(input_string):
+                continue
+            resume = closing.end()
+            split_at = closing.start(1)
+        nxt = input_string[resume:resume + 1]
         # Georgian letters count as lowercase, but a Georgian sentence
         # starts with them too. Title case leaves them unchanged, so only
         # a letter that title case changes shows the sentence goes on.
         goes_on = nxt.islower() and nxt != nxt.title()
         # "Yahoo! and Microsoft", "¡Ay! dijo él"
-        if input_string[split_at - 1] == '!' and goes_on:
+        if input_string[mark - 1] == '!' and goes_on:
             continue
-        if input_string[split_at - 1] == '.':
-            j = split_at - 2
+        if input_string[mark - 1] == '.':
+            j = mark - 2
             while j >= 0 and (input_string[j].isalpha() or input_string[j] == "'"):
                 j -= 1
-            word = input_string[j + 1:split_at - 1]
+            word = input_string[j + 1:mark - 1]
             if _is_abbreviation(word):
                 # a unit symbol after a number ends the sentence ("3 kg.",
                 # "160 km/h.", "120 g/km.") unless the next word goes on
@@ -168,23 +180,23 @@ def sentence_tokenize(input_string):
                 unit = word in _UNITS and k >= 0 and input_string[k].isdecimal()
                 # or a one-letter unit starts a dotted abbreviation ("3 s. S. 45")
                 dotted = len(word) == 1 and nxt.isalpha() \
-                    and input_string[m.end() + 1:m.end() + 2] == "."
+                    and input_string[resume + 1:resume + 2] == "."
                 if not unit or dotted or goes_on:
                     continue
             # an ordinal ("3. de maio", "XIV. acabou") does not end the
             # sentence when the next word goes on in lower case. The number
             # must stand alone: "14:30.", "2,50." and "COVID-19." end in a
             # digit but are not ordinals.
-            k = split_at - 1
+            k = mark - 1
             while k > 0 and input_string[k - 1].isdecimal():
                 k -= 1
-            bare_number = k < split_at - 1 and \
+            bare_number = k < mark - 1 and \
                 (k == 0 or input_string[k - 1].isspace())
             ordinal = bare_number or _ROMAN_NUMERAL.fullmatch(word)
             if ordinal and goes_on:
                 continue
         sentences.append(input_string[last:split_at])
-        last = m.end()
+        last = resume
     sentences.append(input_string[last:])
     return sentences
 
