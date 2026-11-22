@@ -58,7 +58,8 @@ _WORD_REGEX = re.compile(
 # in that list, because it also separates the digits of a number ("３．５").
 # Two marks with the property do not end a sentence. In Burmese, U+104A and
 # U+104B have "significance close to comma and full stop, respectively"
-# (r12a, Myanmar (Burmese) orthography notes, W3C). U+2024, one dot leader,
+# (r12a, Myanmar (Burmese) orthography notes,
+# https://r12a.github.io/scripts/mymr/my). U+2024, one dot leader,
 # is "also used as an Armenian semicolon (mijaket)" (Unicode NamesList).
 _SENTENCE_CLOSE = r"[\p{Pe}\p{Pf}\"']"
 _SENTENCE_SPLIT_CANDIDATE = re.compile(
