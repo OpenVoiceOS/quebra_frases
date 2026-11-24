@@ -74,16 +74,20 @@ This function is in `quebra_frases/list_utils.py`.
 | --- | --- | --- |
 | `flatten(some_list, tuples=True)` | a flat list | this page |
 
-`flatten` removes every level of nesting. With `tuples=True`, it also opens tuples. With `tuples=False`, a tuple stays whole when the list holds no nested list.
-
-A string at the same level as a nested list splits into its characters: `flatten(["ab", ["c"]])` returns `['a', 'b', 'c']`.
+`flatten` removes every level of nesting and returns a new list. It opens only lists, and tuples when `tuples=True`. A string, a number or any other item stays whole at every level. With `tuples=False`, a tuple stays whole, also when the list holds a nested list.
 
 ```python
 >>> from quebra_frases import flatten
 >>> flatten([("A", "B"), ["C"], [["D", ["E", ["F"]]]]])
 ['A', 'B', 'C', 'D', 'E', 'F']
+>>> flatten(["ab", ["c"]])
+['ab', 'c']
+>>> flatten([1, [2]])
+[1, 2]
 >>> flatten([("A", "B")], tuples=False)
 [('A', 'B')]
+>>> flatten([("A", "B"), ["C"]], tuples=False)
+[('A', 'B'), 'C']
 
 ```
 

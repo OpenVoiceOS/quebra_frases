@@ -41,6 +41,15 @@ A delimiter is a literal string, not a regular expression. The function escapes 
 
 ```
 
+With no delimiters, the text is one chunk.
+
+```python
+>>> from quebra_frases import chunk
+>>> chunk("ab", [])
+['ab']
+
+```
+
 A delimiter matches anywhere in the text, also inside a word. At one position, the first delimiter in the list that matches wins.
 
 ```python

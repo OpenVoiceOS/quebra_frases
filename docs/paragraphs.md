@@ -1,7 +1,7 @@
 # Paragraphs
 
 <!-- agent-hint
-covers: what paragraph_tokenize and its indexed forms return, where blank lines go, and the limit of the span offsets
+covers: what paragraph_tokenize and its indexed forms return, where blank lines go, and the offsets of the spans
 source: quebra_frases/tokenization.py:paragraph_tokenize, quebra_frases/tokenization.py:span_indexed_paragraph_tokenize, test/test_chunking.py:test_paragraph, test/test_chunking.py:test_paragraph_tokenize_leading_separator
 generated: no
 verify: python -m doctest -o NORMALIZE_WHITESPACE docs/paragraphs.md
@@ -58,9 +58,17 @@ Blank lines at the start of the text come before any paragraph. The splitter dro
 
 ## What a caller can rely on
 
-When the text does not start with a blank line, the paragraphs joined together give the text back. The spans then give the true position of each paragraph, and `text[start:end]` equals the paragraph.
+When the text does not start with a blank line, the paragraphs joined together give the text back. The spans give the true position of each paragraph, and `text[start:end]` equals the paragraph. This is also true when the text starts with blank lines: the first span starts after them.
 
-The spans add up the lengths of the paragraphs before each one. When the text starts with a blank line, the dropped line moves every span. For the text `"\n\nfoo\n\nbar"`, the first span is `(0, 5)`, which holds `"\n\nfoo"` and not the paragraph `"foo\n\n"`. Remove the leading blank lines before you ask for spans.
+```python
+>>> from quebra_frases import span_indexed_paragraph_tokenize
+>>> text = "\n\nfoo\n\nbar"
+>>> span_indexed_paragraph_tokenize(text)
+[(2, 7, 'foo\n\n'), (7, 10, 'bar')]
+>>> all(text[start:end] == paragraph for start, end, paragraph in span_indexed_paragraph_tokenize(text))
+True
+
+```
 
 ---
 
