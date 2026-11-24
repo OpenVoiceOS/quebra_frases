@@ -1,13 +1,11 @@
-
-
 def flatten(some_list, tuples=True):
-    _flatten = lambda l: [item for sublist in l for item in sublist]
-    if tuples:
-        while any(isinstance(x, list) or isinstance(x, tuple)
-                  for x in some_list):
-            some_list = _flatten(some_list)
-    else:
-        while any(isinstance(x, list) for x in some_list):
-            some_list = _flatten(some_list)
-    return some_list
-
+    # only lists (and tuples, unless tuples=False) are expanded; a string
+    # or any other item stays whole at every depth
+    nested = (list, tuple) if tuples else list
+    flat = []
+    for item in some_list:
+        if isinstance(item, nested):
+            flat.extend(flatten(item, tuples))
+        else:
+            flat.append(item)
+    return flat

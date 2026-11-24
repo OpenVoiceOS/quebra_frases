@@ -200,7 +200,9 @@ def sentence_tokenize(input_string):
                 continue
         sentences.append(input_string[last:split_at])
         last = resume
-    sentences.append(input_string[last:])
+    # whitespace after the last sentence is not a sentence of its own
+    if last < len(input_string) or not sentences:
+        sentences.append(input_string[last:])
     return sentences
 
 
@@ -246,12 +248,15 @@ def char_indexed_paragraph_tokenize(input_string):
 
 
 def span_indexed_paragraph_tokenize(input_string):
-    sentences = paragraph_tokenize(input_string)
+    paragraphs = paragraph_tokenize(input_string)
+    # the paragraphs run on to the end of the text; only the leading
+    # whitespace lines that paragraph_tokenize drops come before them
+    start_idx = len(input_string) - sum(len(p) for p in paragraphs)
     spans = []
-    for idx, s in enumerate(sentences):
-        start_idx = sum(len(_) for _ in sentences[:idx])
-        end_idx = start_idx + len(s)
+    for paragraph in paragraphs:
+        end_idx = start_idx + len(paragraph)
         spans.append((start_idx, end_idx, input_string[start_idx:end_idx]))
+        start_idx = end_idx
     return spans
 
 
@@ -278,17 +283,15 @@ def get_empty_spans(input_string):
 def span_indexed_empty_space_tokenize(input_string):
     spans = []
     start = None
-    total_chars = len(input_string)
-    for idx in range(total_chars):
-        next_char = input_string[idx + 1] if idx < total_chars - 1 else None
-        if start is not None and \
-                (input_string[idx].isspace() or next_char is None):
-            end = idx + 1 if next_char is None else idx
-            spans.append((start, end, input_string[start:end]))
-            start = None
-        elif not input_string[idx].isspace():
-            if start is None:
-                start = idx
+    for idx, char in enumerate(input_string):
+        if char.isspace():
+            if start is not None:
+                spans.append((start, idx, input_string[start:idx]))
+                start = None
+        elif start is None:
+            start = idx
+    if start is not None:
+        spans.append((start, len(input_string), input_string[start:]))
     return spans
 
 
