@@ -1,7 +1,7 @@
 # Whitespace
 
 <!-- agent-hint
-covers: the functions that split on whitespace runs and the function that returns the whitespace runs, with their known limits at the end of a text
+covers: the functions that split on whitespace runs and the function that returns the whitespace runs
 source: quebra_frases/tokenization.py:span_indexed_empty_space_tokenize, quebra_frases/tokenization.py:get_empty_spans, test/test_chunking.py:test_empty, test/test_chunking.py:TestReportedDefects
 generated: no
 verify: python -m doctest -o NORMALIZE_WHITESPACE docs/whitespace.md
@@ -20,7 +20,7 @@ The three functions find the same pieces: the runs of characters that are not wh
 | `char_indexed_empty_space_tokenize(input_string)` | `(start, piece)` |
 | `span_indexed_empty_space_tokenize(input_string)` | `(start, end, piece)` |
 
-A whitespace run of any width and any mix of spaces, tabs and line breaks separates two pieces.
+A whitespace run of any width and any mix of spaces, tabs and line breaks separates two pieces. The pieces are the same as those of `str.split()` with no argument. A one-character piece stays, and no piece holds whitespace.
 
 ```python
 >>> from quebra_frases import empty_space_tokenize, char_indexed_empty_space_tokenize, span_indexed_empty_space_tokenize
@@ -43,12 +43,18 @@ Punctuation stays in the piece, unlike in [Words](words.md).
 
 ```
 
-### Known limits at the end of the text
+The end offset is exclusive, so `text[start:end]` gives the piece back.
 
-The last piece of a text has two known faults:
+```python
+>>> from quebra_frases import empty_space_tokenize, span_indexed_empty_space_tokenize
+>>> empty_space_tokenize("a b")
+['a', 'b']
+>>> empty_space_tokenize("a b") == "a b".split()
+True
+>>> span_indexed_empty_space_tokenize("ab ")
+[(0, 2, 'ab')]
 
-- When the last piece is one character long, the functions drop it. `empty_space_tokenize("a b")` returns `['a']`.
-- When the text ends with exactly one whitespace character, the last piece includes it. `span_indexed_empty_space_tokenize("ab ")` returns `[(0, 3, 'ab ')]`.
+```
 
 ## Get the whitespace runs
 

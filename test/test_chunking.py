@@ -331,3 +331,48 @@ class TestReportedDefects(unittest.TestCase):
         self.assertEqual(
             span_indexed_sentence_tokenize("One.  Two. Three."),
             [(0, 4, "One."), (6, 10, "Two."), (11, 17, "Three.")])
+
+
+class TestTokenizerEdges(unittest.TestCase):
+    """Inputs at the edges of a text: a trailing space, a one-character
+    piece, leading blank lines, a string beside a list, no delimiters."""
+
+    def test_trailing_space_is_not_a_sentence(self):
+        # the text holds one sentence, with or without the space after it
+        self.assertEqual(sentence_tokenize("Hi. "), ["Hi."])
+        self.assertEqual(sentence_tokenize("Hi. "), sentence_tokenize("Hi."))
+        self.assertEqual(span_indexed_sentence_tokenize("Hi. "),
+                         [(0, 3, "Hi.")])
+
+    def test_paragraph_spans_after_leading_blank_lines(self):
+        text = "\n\nfoo\n\nbar"
+        spans = span_indexed_paragraph_tokenize(text)
+        self.assertEqual([piece for _, _, piece in spans],
+                         paragraph_tokenize(text))
+        for start, end, piece in spans:
+            self.assertEqual(text[start:end], piece)
+        self.assertEqual(spans, [(2, 7, "foo\n\n"), (7, 10, "bar")])
+        self.assertEqual(char_indexed_paragraph_tokenize(text),
+                         [(2, "foo\n\n"), (7, "bar")])
+
+    def test_empty_space_tokenize_keeps_one_character_pieces(self):
+        # str.split() with no argument splits on the same str.isspace()
+        for text in ["a b", "a", "ab c", " a "]:
+            self.assertEqual(empty_space_tokenize(text), text.split())
+        self.assertEqual(empty_space_tokenize("a b"), ["a", "b"])
+        self.assertEqual(empty_space_tokenize("a"), ["a"])
+
+    def test_empty_space_span_ends_before_trailing_space(self):
+        text = "ab "
+        self.assertEqual(span_indexed_empty_space_tokenize(text),
+                         [(0, 2, "ab")])
+        self.assertEqual(text[0:2], "ab")
+        self.assertEqual(char_indexed_empty_space_tokenize(text), [(0, "ab")])
+
+    def test_flatten_keeps_a_string_beside_a_list(self):
+        self.assertEqual(flatten(["ab", ["c"]]), ["ab", "c"])
+        self.assertEqual(flatten(["ab", ("c", ["d"])]), ["ab", "c", "d"])
+
+    def test_chunk_with_no_delimiters_is_the_whole_text(self):
+        self.assertEqual(chunk("ab", []), ["ab"])
+        self.assertEqual(chunk("ab", [], strip=False), ["ab"])

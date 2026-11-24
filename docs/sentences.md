@@ -56,14 +56,14 @@ Chinese and Japanese write no space after a sentence. The splitter splits after 
 
 ```
 
-Whitespace at the start of the text stays with the first sentence. When the text ends with whitespace after its last sentence mark, the list ends with an empty string. Strip the text first if you do not want it.
+Whitespace at the start of the text stays with the first sentence. Whitespace after the last sentence mark is dropped, the same as the whitespace between two sentences.
 
 ```python
 >>> from quebra_frases import sentence_tokenize
 >>> sentence_tokenize("  Olá. Tudo bem?  ")
-['  Olá.', 'Tudo bem?', '']
->>> sentence_tokenize("  Olá. Tudo bem?  ".strip())
-['Olá.', 'Tudo bem?']
+['  Olá.', 'Tudo bem?']
+>>> sentence_tokenize("Hi. ")
+['Hi.']
 
 ```
 
