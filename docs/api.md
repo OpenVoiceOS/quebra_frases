@@ -89,7 +89,7 @@ A string at the same level as a nested list splits into its characters: `flatten
 
 ## Version
 
-`quebra_frases.__version__` is the package version as a string, such as `0.3.8a6`. `quebra_frases/version.py` builds it from `VERSION_MAJOR`, `VERSION_MINOR`, `VERSION_BUILD` and `VERSION_ALPHA`, and the release process rewrites those lines.
+`quebra_frases.__version__` is the package version as a string, in the form `1.2.3a4`. `quebra_frases/version.py` builds it from `VERSION_MAJOR`, `VERSION_MINOR`, `VERSION_BUILD` and `VERSION_ALPHA`, and the release process rewrites those lines.
 
 ---
 

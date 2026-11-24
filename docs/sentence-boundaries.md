@@ -95,7 +95,7 @@ After ".", the splitter reads the word before the period. The word is the run of
 1. The word is one letter. This covers initials such as "J." in any script.
 2. The word is all capitals and is in the list of capital abbreviations below. Any other word in capitals, such as an acronym ("TV.") or a Roman numeral ("XX."), is not an abbreviation.
 3. The word is in Latin script and has no vowel. This covers "Dr.", "Srs." and "Płk.".
-4. The word, in lower case, is in the list of short abbreviations below.
+4. The word is not in capitals, and in lower case it is in the list of short abbreviations below.
 
 ```python
 >>> from quebra_frases import sentence_tokenize
@@ -120,7 +120,7 @@ The code comment says these are titles in capitals ("SR.", "EXMO.") and doubled-
 
 ### The short abbreviations
 
-The list is `_ABBREVIATIONS`: sra, dra, exmo, exma, etc, ex, pp, vs, av, num. These words hold a vowel, so the vowel test misses them. The code cites no source for this list.
+The list is `_ABBREVIATIONS`: sra, dra, exmo, exma, etc, ex, pp, vs, av, num. Eight of these words hold a vowel, so the vowel test misses them: sra, dra, exmo, exma, etc, ex, av, num. The words pp and vs hold no vowel, and the vowel test already catches them. The code cites no source for this list.
 
 ### What counts as a vowel
 
