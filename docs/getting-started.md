@@ -91,6 +91,23 @@ To get the position of each token in the text, use `span_indexed_word_tokenize`.
 
 ```
 
+## Which split to use
+
+The functions form families. Each family has a plain form, a form with `char_indexed_` in front that returns `(start, text)`, and a form with `span_indexed_` in front that returns `(start, end, text)`.
+
+```mermaid
+flowchart LR
+    text["text"] --> para["paragraph_tokenize<br/>cut at blank lines"]
+    text --> sent["sentence_tokenize<br/>cut at sentence boundaries"]
+    text --> word["word_tokenize<br/>words and punctuation"]
+    text --> space["empty_space_tokenize<br/>runs that are not whitespace"]
+    text --> chunk["chunk(text, delimiters)<br/>cut at your delimiters"]
+    para -.-> sent
+    sent -.-> word
+```
+
+*Figure: one text enters each family on its own. The dotted arrows show a way to combine them: split a paragraph into sentences, and a sentence into words.*
+
 ## Next steps
 
 Each family of functions has its own page. Start with [Words](words.md), or go to the [API reference](api.md) for the full list of names.

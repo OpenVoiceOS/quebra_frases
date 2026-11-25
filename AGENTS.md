@@ -12,6 +12,7 @@ quebra_frases splits text into words, sentences, paragraphs and chunks, with the
 | `quebra_frases/list_utils.py` | `flatten` |
 | `quebra_frases/version.py` | The version. The release process rewrites the version block. |
 | `test/` | the unittest suite, run with pytest |
+| `scripts/docs_figures.py` | Writes the SVG figure of `docs/figures/`, and with `--measure` the timings that it draws |
 | `examples/` | five scripts that run each kind of split |
 | `docs/` | The user documentation. `docs/index.md` gives the reading order. |
 
@@ -42,5 +43,7 @@ Run the test suite, then the `verify` command of each page you changed. Each pag
 .venv/bin/python -m pytest test
 for f in readme.md docs/*.md; do [ "$f" = docs/index.md ] || .venv/bin/python -m doctest -o NORMALIZE_WHITESPACE "$f" || echo "FAIL $f"; done
 ```
+
+`docs/figures/timing-by-length.svg` comes from `docs/figures/timings.tsv`. After a docs change, run `python scripts/docs_figures.py --check`.
 
 `docs/index.md` and `docs/api.md` have extra checks: the index table must list every page, and the API tables must list every public function with its exact signature.

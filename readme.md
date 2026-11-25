@@ -33,6 +33,8 @@ The package needs Python 3.11 or later, and its only dependency is `regex`. The 
 
 Start with [Getting started](docs/getting-started.md). The [documentation index](docs/index.md) lists every page in reading order, and the [API reference](docs/api.md) lists every public function.
 
+The [performance page](docs/performance.md) shows the time of each splitter by text length, and the [inputs page](docs/inputs.md) shows what happens with empty text and with a value that is not a string.
+
 The `examples/` folder holds five scripts that you can run: word tokens, sentences and paragraphs, whitespace spans, chunking, and sample comparison.
 
 ## License
