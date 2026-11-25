@@ -1,0 +1,17 @@
+function	characters	median ms of 5 runs
+word_tokenize	1000	0.1982
+word_tokenize	10000	1.8869
+word_tokenize	100000	24.0756
+word_tokenize	1000000	192.4462
+sentence_tokenize	1000	0.2684
+sentence_tokenize	10000	2.4038
+sentence_tokenize	100000	25.5517
+sentence_tokenize	1000000	258.0522
+empty_space_tokenize	1000	0.0571
+empty_space_tokenize	10000	0.5614
+empty_space_tokenize	100000	8.0256
+empty_space_tokenize	1000000	83.3836
+paragraph_tokenize	1000	0.0075
+paragraph_tokenize	10000	0.0557
+paragraph_tokenize	100000	0.6020
+paragraph_tokenize	1000000	7.2679

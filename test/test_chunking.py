@@ -13,15 +13,26 @@ class TestChunking(unittest.TestCase):
         self.assertEqual(
             word_tokenize("100%"),
             ['100', '%'])
+        # A digit run joined by "/" is one token, the same as "1.5" and
+        # "13:00": the numeric alternative of _WORD_REGEX takes [,.:/] as
+        # in-number separators since #1, so a fraction or a date reaches a
+        # number parser whole ("3/4", "11/11/2023"). A "/" between spaces
+        # or between letters is still its own token.
         self.assertEqual(
             word_tokenize("2 and 3/4"),
-            ['2', 'and', '3', "/", '4'])
+            ['2', 'and', '3/4'])
         self.assertEqual(
             word_tokenize("2 and (3/4)"),
-            ['2', 'and', '(', '3', '/', '4', ')'])
+            ['2', 'and', '(', '3/4', ')'])
         self.assertEqual(
             word_tokenize("2 and [3/4]"),
-            ['2', 'and', '[', '3', '/', '4', ']'])
+            ['2', 'and', '[', '3/4', ']'])
+        self.assertEqual(
+            word_tokenize("on 11/11/2023 at 13:00"),
+            ['on', '11/11/2023', 'at', '13:00'])
+        self.assertEqual(
+            word_tokenize("3 / 4 and a/b"),
+            ['3', '/', '4', 'and', 'a', '/', 'b'])
         self.assertEqual(
             word_tokenize("2 and 3\\4"),
             ['2', 'and', '3', "\\", '4'])
@@ -41,12 +52,58 @@ class TestChunking(unittest.TestCase):
              (37, 38, ','), (39, 46, 'mycroft'), (47, 49, 'is'),
              (50, 54, 'FOSS'), (54, 55, '!')])
 
+        # A leading "-" on a digit run is the sign of a negative number
+        # since #3 ("-2", "-2.5"); a "-" set apart by a space is an operator
         self.assertEqual(
             word_tokenize("-2"),
-            ['-', '2'])
+            ['-2'])
+        self.assertEqual(
+            word_tokenize("-2.5"),
+            ['-2.5'])
         self.assertEqual(
             word_tokenize("- 2"),
             ['-', '2'])
+        self.assertEqual(
+            word_tokenize("2 - 2"),
+            ['2', '-', '2'])
+
+    def test_word_combining_marks(self):
+        # Vowel signs, viramas and tone marks (Unicode category Mn/Mc) are
+        # part of the word they sit on. Thai writes no spaces between words,
+        # so the whole run is one token; punctuation is still split off.
+        self.assertEqual(
+            word_tokenize("เพิ่มความสว่างไฟ"),
+            ['เพิ่มความสว่างไฟ'])
+        self.assertEqual(
+            word_tokenize("เพิ่มความสว่างไฟ!"),
+            ['เพิ่มความสว่างไฟ', '!'])
+        self.assertEqual(
+            word_tokenize("ปิดไฟ, เปิดเพลง?"),
+            ['ปิดไฟ', ',', 'เปิดเพลง', '?'])
+        # Hindi (Devanagari)
+        self.assertEqual(
+            word_tokenize("नमस्ते"),
+            ['नमस्ते'])
+        self.assertEqual(
+            word_tokenize("बत्ती की चमक बढ़ाओ!"),
+            ['बत्ती', 'की', 'चमक', 'बढ़ाओ', '!'])
+        # Bengali
+        self.assertEqual(
+            word_tokenize("আলো বাড়াও"),
+            ['আলো', 'বাড়াও'])
+        # Tamil
+        self.assertEqual(
+            word_tokenize("விளக்கை அணை"),
+            ['விளக்கை', 'அணை'])
+        # a Latin accent written as a separate combining mark (NFD) stays
+        # on its letter too
+        self.assertEqual(
+            word_tokenize("cafe\u0301 noir"),
+            ['cafe\u0301', 'noir'])
+        # spans still cover the whole word, marks included
+        self.assertEqual(
+            span_indexed_word_tokenize("नमस्ते दुनिया"),
+            [(0, 6, 'नमस्ते'), (7, 13, 'दुनिया')])
 
     def test_empty(self):
         test_sent = "this is a   string with  many \t spaces and \n\r\t\r stuff"
@@ -240,3 +297,82 @@ class TestChunking(unittest.TestCase):
             flatten([("A", "B"), ["C"], [["D", ["E", ["F"]]]]]),
             ["A", "B", "C", "D", "E", "F"]
         )
+
+
+class TestReportedDefects(unittest.TestCase):
+    """Inputs that were wrong on dev at c8e1e10, each the exact reported case."""
+
+    def test_chunk_delimiter_is_a_literal(self):
+        # "." read as a regex matched every character
+        self.assertEqual(chunk("a.b|c", ["."]), ["a", ".", "b|c"])
+
+    def test_chunk_delimiter_that_cannot_compile_alone(self):
+        # "+" and "(" raised re.error straight out of the delimiter list
+        self.assertEqual(chunk("a+b", ["+"]), ["a", "+", "b"])
+        self.assertEqual(chunk("a(b", ["("]), ["a", "(", "b"])
+
+    def test_paragraph_tokenize_leading_separator(self):
+        # a leading newline indexed paragraphs[-1] on an empty list
+        self.assertEqual(paragraph_tokenize("\nfirst"), ["first"])
+        self.assertEqual(paragraph_tokenize("\nfirst\n\nsecond"),
+                         ["first\n\n", "second"])
+
+    def test_empty_span_at_end_of_string_keeps_its_length(self):
+        # the trailing run of two spaces was reported as one character
+        self.assertEqual(get_empty_spans("hello  world  "),
+                         [(5, 7, "  "), (12, 14, "  ")])
+
+    def test_empty_span_starting_at_index_zero(self):
+        # `elif start:` is false when the run starts at 0, so it was dropped
+        self.assertEqual(get_empty_spans("  a"), [(0, 2, "  ")])
+
+    def test_sentence_spans_survive_a_double_space(self):
+        # the offsets assumed exactly one space between sentences
+        self.assertEqual(
+            span_indexed_sentence_tokenize("One.  Two. Three."),
+            [(0, 4, "One."), (6, 10, "Two."), (11, 17, "Three.")])
+
+
+class TestTokenizerEdges(unittest.TestCase):
+    """Inputs at the edges of a text: a trailing space, a one-character
+    piece, leading blank lines, a string beside a list, no delimiters."""
+
+    def test_trailing_space_is_not_a_sentence(self):
+        # the text holds one sentence, with or without the space after it
+        self.assertEqual(sentence_tokenize("Hi. "), ["Hi."])
+        self.assertEqual(sentence_tokenize("Hi. "), sentence_tokenize("Hi."))
+        self.assertEqual(span_indexed_sentence_tokenize("Hi. "),
+                         [(0, 3, "Hi.")])
+
+    def test_paragraph_spans_after_leading_blank_lines(self):
+        text = "\n\nfoo\n\nbar"
+        spans = span_indexed_paragraph_tokenize(text)
+        self.assertEqual([piece for _, _, piece in spans],
+                         paragraph_tokenize(text))
+        for start, end, piece in spans:
+            self.assertEqual(text[start:end], piece)
+        self.assertEqual(spans, [(2, 7, "foo\n\n"), (7, 10, "bar")])
+        self.assertEqual(char_indexed_paragraph_tokenize(text),
+                         [(2, "foo\n\n"), (7, "bar")])
+
+    def test_empty_space_tokenize_keeps_one_character_pieces(self):
+        # str.split() with no argument splits on the same str.isspace()
+        for text in ["a b", "a", "ab c", " a "]:
+            self.assertEqual(empty_space_tokenize(text), text.split())
+        self.assertEqual(empty_space_tokenize("a b"), ["a", "b"])
+        self.assertEqual(empty_space_tokenize("a"), ["a"])
+
+    def test_empty_space_span_ends_before_trailing_space(self):
+        text = "ab "
+        self.assertEqual(span_indexed_empty_space_tokenize(text),
+                         [(0, 2, "ab")])
+        self.assertEqual(text[0:2], "ab")
+        self.assertEqual(char_indexed_empty_space_tokenize(text), [(0, "ab")])
+
+    def test_flatten_keeps_a_string_beside_a_list(self):
+        self.assertEqual(flatten(["ab", ["c"]]), ["ab", "c"])
+        self.assertEqual(flatten(["ab", ("c", ["d"])]), ["ab", "c", "d"])
+
+    def test_chunk_with_no_delimiters_is_the_whole_text(self):
+        self.assertEqual(chunk("ab", []), ["ab"])
+        self.assertEqual(chunk("ab", [], strip=False), ["ab"])

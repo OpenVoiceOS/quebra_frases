@@ -1,93 +1,42 @@
-# Quebra Frases
+# quebra_frases
 
-quebra_frases chunks strings into byte sized pieces
+<!-- agent-hint
+covers: what quebra_frases does, how to install it, and a quickstart that runs on a clean install
+source: quebra_frases/tokenization.py, quebra_frases/chunks.py, pyproject.toml
+generated: no
+verify: python -m doctest -o NORMALIZE_WHITESPACE readme.md
+see: docs/index.md, docs/getting-started.md, AGENTS.md
+-->
 
-## Usage
+quebra_frases splits text into words, sentences, paragraphs and chunks. Each splitter also has a form that returns the character offsets of each piece. The sentence splitter knows abbreviations, initials, unit symbols and ordinals, and it splits scripts that write no space between sentences.
 
-Tokenization
-
-```python
-import quebra_frases
-
-sentence = "sometimes i develop stuff for mycroft, mycroft is FOSS!"
-print(quebra_frases.word_tokenize(sentence))
-# ['sometimes', 'i', 'develop', 'stuff', 'for', 'mycroft', ',', 
-# 'mycroft', 'is', 'FOSS', '!']
-
-print(quebra_frases.span_indexed_word_tokenize(sentence))
-# [(0, 9, 'sometimes'), (10, 11, 'i'), (12, 19, 'develop'), 
-# (20, 25, 'stuff'), (26, 29, 'for'), (30, 37, 'mycroft'), 
-# (37, 38, ','), (39, 46, 'mycroft'), (47, 49, 'is'), 
-# (50, 54, 'FOSS'), (54, 55, '!')]
-
-print(quebra_frases.sentence_tokenize(
-    "Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it. Did he mind? Adam Jones Jr. thinks he didn't. In any case, this isn't true... Well, with a probability of .9 it isn't."))
-#['Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it.',
-#'Did he mind?',
-#"Adam Jones Jr. thinks he didn't.",
-#"In any case, this isn't true...",
-#"Well, with a probability of .9 it isn't."]
-
-print(quebra_frases.span_indexed_sentence_tokenize(
-    "Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it. Did he mind? Adam Jones Jr. thinks he didn't. In any case, this isn't true... Well, with a probability of .9 it isn't."))
-#[(0, 82, 'Mr. Smith bought cheapsite.com for 1.5 million dollars, i.e. he paid a lot for it.'),
-#(83, 95, 'Did he mind?'),
-#(96, 128, "Adam Jones Jr. thinks he didn't."),
-#(129, 160, "In any case, this isn't true..."),
-#(161, 201, "Well, with a probability of .9 it isn't.")]
-
-print(quebra_frases.paragraph_tokenize('This is a paragraph!\n\t\nThis is another '
-                                       'one.\t\n\tUsing multiple lines\t   \n     '
-                                       '\n\tparagraph 3 says goodbye'))
-#['This is a paragraph!\n\t\n',
-#'This is another one.\t\n\tUsing multiple lines\t   \n     \n',
-#'\tparagraph 3 says goodbye']
-
-print(quebra_frases.span_indexed_paragraph_tokenize('This is a paragraph!\n\t\nThis is another '
-                                                    'one.\t\n\tUsing multiple lines\t   \n     '
-                                                    '\n\tparagraph 3 says goodbye'))
-#[(0, 23, 'This is a paragraph!\n\t\n'),
-#(23, 77, 'This is another one.\t\n\tUsing multiple lines\t   \n     \n'),
-#(77, 102, '\tparagraph 3 says goodbye')]
-```
-
-chunking
-
-```python
-import quebra_frases
-
-delimiters = ["mycroft"]
-sentence = "sometimes i develop stuff for mycroft, mycroft is FOSS!"
-print(quebra_frases.chunk(sentence, delimiters))
-# ['sometimes i develop stuff for', 'mycroft', ',', 'mycroft', 'is FOSS!']
-
-
-samples = ["tell me what do you dream about",
-           "tell me what did you dream about",
-           "tell me what are your dreams about",
-           "tell me what were your dreams about"]
-print(quebra_frases.get_common_chunks(samples))
-# {'tell me what', 'about'}
-print(quebra_frases.get_uncommon_chunks(samples))
-# {'do you dream', 'did you dream', 'are your dreams', 'were your dreams'}
-print(quebra_frases.get_exclusive_chunks(samples))
-# {'do', 'did', 'are', 'were'}
-
-
-samples = ["what is the speed of light",
-           "what is the maximum speed of a firetruck",
-           "why are fire trucks red"]
-print(quebra_frases.get_exclusive_chunks(samples))
-# {'light', 'maximum', 'a firetruck', 'why are fire trucks red'})
-print(quebra_frases.get_exclusive_chunks(samples, squash=False))
-#[['light'],
-#['maximum', 'a firetruck'],
-#['why are fire trucks red']])
-```
-
-
-## Install
+## Quickstart
 
 ```bash
-pip install quebra_frases
+pip install --pre quebra_frases
 ```
+
+```python
+>>> from quebra_frases import word_tokenize, sentence_tokenize, chunk
+>>> word_tokenize("O Pedro pagou 2,50 € às 14:30.")
+['O', 'Pedro', 'pagou', '2,50', '€', 'às', '14:30', '.']
+>>> sentence_tokenize("Mr. Smith paid 1.5 million. Did he mind?")
+['Mr. Smith paid 1.5 million.', 'Did he mind?']
+>>> chunk("turn on the light and the fan", ["light", "fan"])
+['turn on the', 'light', 'and the', 'fan']
+
+```
+
+The package needs Python 3.11 or later, and its only dependency is `regex`. The `--pre` flag installs the latest alpha release.
+
+## Documentation
+
+Start with [Getting started](docs/getting-started.md). The [documentation index](docs/index.md) lists every page in reading order, and the [API reference](docs/api.md) lists every public function.
+
+The [performance page](docs/performance.md) shows the time of each splitter by text length, and the [inputs page](docs/inputs.md) shows what happens with empty text and with a value that is not a string.
+
+The `examples/` folder holds five scripts that you can run: word tokens, sentences and paragraphs, whitespace spans, chunking, and sample comparison.
+
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).
