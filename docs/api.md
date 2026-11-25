@@ -97,4 +97,4 @@ This function is in `quebra_frases/list_utils.py`.
 
 ---
 
-[Index](index.md) · Previous: [Comparing samples](comparing-samples.md) · Next: none
+[Index](index.md) · Previous: [Performance](performance.md) · Next: none

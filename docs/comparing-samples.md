@@ -86,4 +86,4 @@ The join puts one space between all tokens, punctuation included. The chunks are
 
 ---
 
-[Index](index.md) · Previous: [Chunks](chunks.md) · Next: [API reference](api.md)
+[Index](index.md) · Previous: [Chunks](chunks.md) · Next: [Empty text, wrong types and long text](inputs.md)

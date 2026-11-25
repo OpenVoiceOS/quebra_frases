@@ -12,6 +12,32 @@ This page gives the rules that `sentence_tokenize` applies, in the order the cod
 
 The splitter first finds candidate split points. It then checks each candidate and keeps or rejects it.
 
+## The steps in one diagram
+
+The splitter walks each candidate through the steps below. The diagram shows the order and the three ways out.
+
+```mermaid
+flowchart TD
+    cand["candidate: a Sentence_Terminal mark<br/>and the whitespace after it"] --> close{"closing marks follow?"}
+    close -- "yes, and the text ends there" --> reject["not a split"]
+    close -- "yes" --> move["move the split past them"]
+    close -- no --> nxt["read the next character"]
+    move --> nxt
+    nxt --> bang{"mark is !, and the sentence<br/>goes on in lower case?"}
+    bang -- yes --> reject
+    bang -- no --> dot{"mark is a period?"}
+    dot -- no --> split["split: the sentence ends"]
+    dot -- yes --> abbr{"word before it is<br/>an abbreviation?"}
+    abbr -- no --> ord
+    abbr -- yes --> unit{"unit symbol after a digit,<br/>not dotted, not going on<br/>in lower case?"}
+    unit -- no --> reject
+    unit -- yes --> ord{"ordinal, and the sentence<br/>goes on in lower case?"}
+    ord -- yes --> reject
+    ord -- no --> split
+```
+
+*Figure: the checks of Steps 1 to 7 for one candidate. Only a period reaches the abbreviation, unit and ordinal checks, and every other mark that passes the "!" check ends the sentence.*
+
 ## Step 1: Find the candidate split points
 
 A candidate is a mark with the Unicode `Sentence_Terminal` property, followed by a run of whitespace. UAX #29, Unicode Text Segmentation, uses this property for sentence breaks. It covers ".", "?", "!", the Devanagari danda "।", the Arabic question mark "؟", "。" and others.
